@@ -5,7 +5,6 @@ package com.personal.carsharing.carsharingapp.repository.payment;
 //import org.springframework.stereotype.Repository;
 
 //@Repository
-public interface PaymentRepository
+public interface PaymentRepository {
 //        extends JpaRepository<Payment,Long>
-{
 }

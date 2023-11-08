@@ -5,7 +5,6 @@ package com.personal.carsharing.carsharingapp.repository.rental;
 //import org.springframework.stereotype.Repository;
 
 //@Repository
-public interface RentalRepository
+public interface RentalRepository {
 //        extends JpaRepository<Rental,Long>
-{
 }
