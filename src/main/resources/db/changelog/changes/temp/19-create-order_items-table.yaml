@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-order_items-table
+      author: artemmakovskyy
+      changes:
+        - createTable:
+            tableName: order_items
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable:  false
+                    foreignKeyName: fk_order_items_orders
+                    referencedTableName: orders
+                    referencedColumnNames:  id
+              - column:
+                  name: book_id
+                  type: bigint
+                  constraints:
+                    nullable:  false
+                    foreignKeyName: fk_order_items_books
+                    referencedTableName: books
+                    referencedColumnNames:  id
+              - column:
+                  name: quantity
+                  type: int
+                  defaultValue:
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price
+                  type: DECIMAL(38,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_deleted
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

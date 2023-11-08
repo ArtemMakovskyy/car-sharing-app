@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-books_categories-table
+      author: artemmakovskyy
+      changes:
+        - createTable:
+            tableName: books_categories
+            columns:
+              - column:
+                  name: book_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_books_categories_books
+                    references: books(id)
+                    primaryKey: true
+                    deleteCascade: false
+              - column:
+                  name: category_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_books_categories_categories
+                    references: categories(id)
+                    primaryKey: true
+                    deleteCascade: false
