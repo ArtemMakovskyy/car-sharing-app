@@ -2,12 +2,14 @@ package com.personal.carsharing.carsharingapp.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/health")
 public class HealthCheckController {
 
-    @GetMapping("/health")
+    @GetMapping
     public ResponseEntity<String> healthCheck() {
         // Implement health check logic here
         // You can perform database, external service, or any other health checks here
