@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-cars
+      author: artemmakovskyy
+      changes:
+        - insert:
+            tableName: cars
+            columns:
+              - column: {name: model, value: "Logan"}
+              - column: {name: brand, value: "Dacia"}
+              - column: {name: type, value: "SEDAN"}
+              - column: {name: inventory, value: 1}
+              - column: {name: daily_fee, value: 10.50}
+        - insert:
+            tableName: cars
+            columns:
+              - column: {name: model, value: "Logan"}
+              - column: {name: brand, value: "Dacia"}
+              - column: {name: type, value: "UNIVERSAL"}
+        - insert:
+            tableName: cars
+            columns:
+              - column: {name: model, value: "Civic"}
+              - column: {name: brand, value: "Honda"}
+              - column: {name: type, value: "HATCHBACK "}
+              - column: {name: inventory, value: 2}
+              - column: {name: daily_fee, value: 15.11}
+        - insert:
+            tableName: cars
+            columns:
+              - column: {name: model, value: "Focus"}
+              - column: {name: brand, value: "Ford"}
+              - column: {name: type, value: "HATCHBACK "}
+              - column: {name: inventory, value: 2}
+              - column: {name: daily_fee, value: 16.11}
+        - insert:
+            tableName: cars
+            columns:
+              - column: {name: model, value: "Camry"}
+              - column: {name: brand, value: "Toyota"}
+              - column: {name: type, value: "SEDAN"}
+              - column: {name: inventory, value: 3}
+              - column: {name: daily_fee, value: 25.50}
+        - insert:
+            tableName: cars
+            columns:
+              - column: {name: model, value: "3 Series"}
+              - column: {name: brand, value: "BMW"}
+              - column: {name: type, value: "SEDAN"}
+              - column: {name: inventory, value: 1}
+              - column: {name: daily_fee, value: 20.00}
+        - insert:
+            tableName: cars
+            columns:
+              - column: {name: model, value: "Explorer"}
+              - column: {name: brand, value: "Ford"}
+              - column: {name: type, value: "SUV"}
+              - column: {name: inventory, value: 1}
+              - column: {name: daily_fee, value: 25.99}
