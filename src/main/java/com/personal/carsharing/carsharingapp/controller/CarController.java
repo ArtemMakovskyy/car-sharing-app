@@ -1,50 +1,86 @@
 package com.personal.carsharing.carsharingapp.controller;
 
-import org.springframework.http.ResponseEntity;
+import com.personal.carsharing.carsharingapp.dto.internal.car.CarDto;
+import com.personal.carsharing.carsharingapp.dto.internal.car.CreateCarRequestDto;
+import com.personal.carsharing.carsharingapp.service.CarService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
+@Tag(name = "Car management", description = "Endpoints to managing cars")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/cars")
 public class CarController {
+    private final CarService carService;
+
+    //    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Creating a new Car.",
+            description = "Creating a new Car with valid data")
     @PostMapping
-    public ResponseEntity<?> addCar(
-    //            @RequestBody CarRequest request
-    ) {
-        // Implement add car logic and return appropriate response
-        return null;
+    @ResponseStatus(HttpStatus.CREATED)
+    public CarDto addCar(
+            @RequestBody @Valid CreateCarRequestDto request) {
+        // TODO: 09.11.2023 Need to valid TYPE enum
+        return carService.save(request);
     }
 
+    //    @PreAuthorize("hasRole('ROLE_USER')")
+    @Operation(summary = "Getting available cars.",
+            description = "Retrieve page with available cars.\n" +
+                          "By default it is first page with 10 cars, sorted ASC by model\n" +
+                          "except those deleted using soft delete.\n")
     @GetMapping
-    public ResponseEntity<?> getAllCars() {
-        // Implement get all cars logic and return list of cars
-        return null;
+    public List<CarDto> getAllCars(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "model") String[] sort) {
+        final Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        return carService.findAll(pageable);
     }
 
+    //    @PreAuthorize("hasRole('ROLE_USER')")
+    @Operation(summary = "Getting available car by id.",
+            description = "Retrieve available car by id,\n" +
+                          "if it has not been deleted with soft delete.")
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCarDetails(@PathVariable Long id) {
-        // Implement get car details logic and return car information
-        return null;
+    public CarDto getCarById(@PathVariable Long id) {
+        return carService.findById(id);
     }
 
+    //    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Updating car by id",
+            description = "Updating available car by id, "
+                          + "except those deleted using soft delete.")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCar(@PathVariable Long id
-    //            ,
-    //                                       @RequestBody CarUpdateRequest request
-    ) {
-        // Implement update car logic and return appropriate response
-        return null;
-
+    public CarDto updateCar(
+            @PathVariable Long id,
+            @RequestBody @Valid CreateCarRequestDto requestDto) {
+        return carService.update(id, requestDto);
     }
 
+    //    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Deleting car by id",
+            description = "Soft deleting available car by id")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCar(@PathVariable Long id) {
-        // Implement delete car logic and return appropriate response
-        return null;
+    public void deleteCar(@PathVariable Long id) {
+        carService.deleteById(id);
     }
 }

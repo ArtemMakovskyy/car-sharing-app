@@ -163,6 +163,7 @@
         <!--            <scope>test</scope>-->
         <!--        </dependency>-->
     </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -195,7 +196,7 @@
                         </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct</artifactId>
+                            <artifactId>mapstruct-processor</artifactId>
                             <version>${mapstruct.version}</version>
                         </path>
                     </annotationProcessorPaths>
@@ -246,5 +247,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
