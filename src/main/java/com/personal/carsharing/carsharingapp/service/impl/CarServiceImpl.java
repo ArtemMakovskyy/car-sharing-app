@@ -7,10 +7,9 @@ import com.personal.carsharing.carsharingapp.exception.EntityNotFoundException;
 import com.personal.carsharing.carsharingapp.model.Car;
 import com.personal.carsharing.carsharingapp.repository.car.CarRepository;
 import com.personal.carsharing.carsharingapp.service.CarService;
-
 import java.util.List;
-import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service

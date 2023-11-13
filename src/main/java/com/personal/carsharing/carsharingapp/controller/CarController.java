@@ -6,11 +6,13 @@ import com.personal.carsharing.carsharingapp.service.CarService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.List;
 
 @Tag(name = "Car management", description = "Endpoints to managing cars")
 @RestController
@@ -30,22 +31,21 @@ import java.util.List;
 public class CarController {
     private final CarService carService;
 
-    //    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Creating a new Car.",
             description = "Creating a new Car with valid data")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CarDto addCar(
             @RequestBody @Valid CreateCarRequestDto request) {
-        // TODO: 09.11.2023 Need to valid TYPE enum
         return carService.save(request);
     }
 
-    //    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_ADMIN','ROLE_CUSTOMER')")
     @Operation(summary = "Getting available cars.",
-            description = "Retrieve page with available cars.\n" +
-                          "By default it is first page with 10 cars, sorted ASC by model\n" +
-                          "except those deleted using soft delete.\n")
+            description = "Retrieve page with available cars.\n"
+                    + "By default it is first page with 10 cars, sorted ASC by model\n"
+                    + "except those deleted using soft delete.\n")
     @GetMapping
     public List<CarDto> getAllCars(
             @RequestParam(defaultValue = "0") int page,
@@ -55,27 +55,26 @@ public class CarController {
         return carService.findAll(pageable);
     }
 
-    //    @PreAuthorize("hasRole('ROLE_USER')")
     @Operation(summary = "Getting available car by id.",
-            description = "Retrieve available car by id,\n" +
-                          "if it has not been deleted with soft delete.")
+            description = "Retrieve available car by id,\n"
+                    + "if it has not been deleted with soft delete.")
     @GetMapping("/{id}")
     public CarDto getCarById(@PathVariable Long id) {
         return carService.findById(id);
     }
 
-    //    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_ADMIN')")
     @Operation(summary = "Updating car by id",
             description = "Updating available car by id, "
-                          + "except those deleted using soft delete.")
+                    + "except those deleted using soft delete.")
     @PutMapping("/{id}")
-    public CarDto updateCar(
+    public CarDto updateCarById(
             @PathVariable Long id,
             @RequestBody @Valid CreateCarRequestDto requestDto) {
         return carService.update(id, requestDto);
     }
 
-    //    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Deleting car by id",
             description = "Soft deleting available car by id")
     @ResponseStatus(HttpStatus.NO_CONTENT)

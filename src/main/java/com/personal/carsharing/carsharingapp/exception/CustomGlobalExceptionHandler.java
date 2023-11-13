@@ -1,5 +1,9 @@
 package com.personal.carsharing.carsharingapp.exception;
 
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -11,11 +15,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 @ControllerAdvice
 public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -45,6 +44,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         }
         return e.getDefaultMessage();
     }
+
     @ExceptionHandler(value = {EntityNotFoundException.class})
     protected ResponseEntity<Object> handleEntityNotFoundException(
             EntityNotFoundException ex,
@@ -56,6 +56,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return handleExceptionInternal(ex, body, new HttpHeaders(),
                 HttpStatus.NOT_FOUND, request);
     }
+
     @ExceptionHandler(value = EmptyDataException.class)
     protected ResponseEntity<Object> handleEmptyDataException(
             EmptyDataException ex,
@@ -67,6 +68,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return handleExceptionInternal(ex, body, new HttpHeaders(),
                 HttpStatus.CONFLICT, request);
     }
+
     @ExceptionHandler(value = DataDuplicationException.class)
     protected ResponseEntity<Object> handleDataDuplicationException(
             DataDuplicationException ex,
@@ -78,6 +80,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return handleExceptionInternal(ex, body, new HttpHeaders(),
                 HttpStatus.CONFLICT, request);
     }
+
     @ExceptionHandler(value = RegistrationException.class)
     protected ResponseEntity<Object> handleRegistrationException(
             RegistrationException ex,

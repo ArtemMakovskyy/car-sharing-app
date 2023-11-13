@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-users
+      author: artemmakovskyy
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: admin1234@mail.com
+              - column:
+                  name: first_name
+                  value: Admin
+              - column:
+                  name: last_name
+                  value: Adminovich
+              - column:
+                  name: password
+                  value: $2a$10$EyMhknB1lNDjXR8DyrKy5e6bNaF9PK7h9904qGD/iL.XpHUMKd4UW
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+              - column:
+                  name: role_id
+                  valueNumeric: 1
