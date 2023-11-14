@@ -1,6 +1,10 @@
 package com.personal.carsharing.carsharingapp.dto.internal.user;
 
-import jakarta.validation.Valid;
+import com.personal.carsharing.carsharingapp.validation.ValidUserRole;
+import jakarta.validation.constraints.NotBlank;
 
-public record UpdateUserRoleDto(@Valid String role) {
+public record UpdateUserRoleDto(
+        @ValidUserRole
+        @NotBlank(message = "Role should not be blank")
+        String role) {
 }

@@ -10,7 +10,6 @@ import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.repository.role.RoleRepository;
 import com.personal.carsharing.carsharingapp.repository.user.UserRepository;
 import com.personal.carsharing.carsharingapp.service.UserService;
-import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -24,6 +23,32 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+
+    @Override
+    public UserResponseDto updateRole(Long userId, String role) {
+        final User userFromDb = userRepository.findById(userId).orElseThrow(
+                () -> new EntityNotFoundException("Can't find user by id " + userId));
+        final Role roleFromDb = roleRepository.findByName(Role.RoleName.valueOf(role)).orElseThrow(
+                () -> new EntityNotFoundException("Can't find role " + role));
+        userFromDb.setRoles(Set.of(roleFromDb));
+        return userMapper.toDto(userRepository.save(userFromDb));
+    }
+
+    @Override
+    public UserResponseDto updateInfo(
+            Authentication authentication, UserRegistrationRequestDto requestDto) {
+        final User userFromAuthentication = (User) authentication.getPrincipal();
+        userFromAuthentication.setEmail(requestDto.getEmail());
+        userFromAuthentication.setFirstName(requestDto.getFirstName());
+        userFromAuthentication.setLastName(requestDto.getLastName());
+        userFromAuthentication.setPassword(requestDto.getPassword());
+        return userMapper.toDto(userRepository.save(userFromAuthentication));
+    }
+
+    @Override
+    public UserResponseDto getUserFromAuthentication(Authentication authentication) {
+        return userMapper.toDto((User) authentication.getPrincipal());
+    }
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto request)
@@ -43,18 +68,5 @@ public class UserServiceImpl implements UserService {
 
         final User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);
-    }
-
-    @Override
-    public UserResponseDto getUserFromAuthentication(Authentication authentication) {
-        return userMapper.toDto((User) authentication.getPrincipal());
-    }
-
-    @Override
-    public UserResponseDto updateRole(Long userId, String role) {
-        final User userFromDb = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Can't find user by id " + userId));
-        final Role.RoleName roleName = Role.RoleName.valueOf(role);
-
-        return null;
     }
 }
