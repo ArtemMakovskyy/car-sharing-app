@@ -41,7 +41,6 @@ public class CarController {
         return carService.save(request);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_ADMIN','ROLE_CUSTOMER')")
     @Operation(summary = "Getting available cars.",
             description = "Retrieve page with available cars.\n"
                     + "By default it is first page with 10 cars, sorted ASC by model\n"
@@ -63,7 +62,7 @@ public class CarController {
         return carService.findById(id);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @Operation(summary = "Updating car by id",
             description = "Updating available car by id, "
                     + "except those deleted using soft delete.")
