@@ -2,62 +2,57 @@ package com.personal.carsharing.carsharingapp.controller;
 
 import com.personal.carsharing.carsharingapp.dto.internal.rental.CreateRentalRequestDto;
 import com.personal.carsharing.carsharingapp.dto.internal.rental.RentalDto;
-import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.service.RentalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/rentals")
 @RequiredArgsConstructor
+@Tag(name = "Rental management", description = "Endpoints for managing rentals")
 public class RentalController {
     private final RentalService rentalService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Add new rental",
+            description = "Add new car rental and decrease car inventory by 1")
     public RentalDto addRental(
             @RequestBody @Valid CreateRentalRequestDto requestDto,
             Authentication authentication) {
-        final User credentials = (User) authentication.getCredentials();
-        final User principal = (User) authentication.getPrincipal();
-        System.out.println(principal);
-        System.out.println(authentication.getName());
-        rentalService.add(requestDto,authentication);
-        return null;
+        return rentalService.add(requestDto, authentication);
     }
 
     @GetMapping("/")
-//    GET: /rentals/?user_id=1&is_active=true
-    public List<RentalDto> getRentals(
-            @RequestParam(name = "user_id", required = false) Long userId,
-            @RequestParam(name = "is_active",  required = false) Boolean isActive
-//            @RequestParam(name = "is_active", defaultValue = "true", required = false) Boolean isActive
-    ) {
-        System.out.println(userId + " " + isActive);
-        // Implement get rentals by user ID and active status logic and return rentals
-        return null;
+    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_ADMIN')")
+    public List<RentalDto> getRentalsByUserIdAndRentalStatus(
+            @RequestParam(name = "user_id") Long userId,
+            @RequestParam(name = "is_active") Boolean isActive,
+            Pageable pageable) {
+        return rentalService.findAllByUserIdAndStatus(userId, isActive, pageable);
     }
 
-    @GetMapping("/{id}")
-    public RentalDto getRentalDetails(@PathVariable Long id) {
-        // Implement get rental details logic and return rental information
-        return null;
+    @GetMapping
+    public RentalDto getUserRentalDetails(Authentication authentication) {
+        return rentalService.getUserRentalDetailsByAuthentication(authentication);
     }
 
     @PostMapping("/return")
-    public RentalDto returnRental(@PathVariable Long id
-    //            , @RequestBody RentalReturnRequest request
-    ) {
-        // Implement return rental logic and update car inventory, then return appropriate response
-        return null;
+    public RentalDto returnRental(Authentication authentication) {
+        return rentalService.returnRentalCar(authentication);
     }
 }

@@ -64,7 +64,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.CONFLICT);
-        body.put("error", "Data doesn't exist " + ex.getMessage());
+        body.put("error", "Data is empty. " + ex.getMessage());
         return handleExceptionInternal(ex, body, new HttpHeaders(),
                 HttpStatus.CONFLICT, request);
     }
@@ -76,7 +76,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.CONFLICT);
-        body.put("error", "Data already exists  " + ex.getMessage());
+        body.put("error", "Data duplication.  " + ex.getMessage());
         return handleExceptionInternal(ex, body, new HttpHeaders(),
                 HttpStatus.CONFLICT, request);
     }

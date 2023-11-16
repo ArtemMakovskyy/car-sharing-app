@@ -5,10 +5,10 @@ import lombok.Data;
 
 @Data
 public class RentalDto {
-        private Long id;
-        private LocalDateTime rentalDate;
-        private LocalDateTime returnDate;
-        private LocalDateTime actualReturnDate;
-        private Long carId;
-        private Long userId;
+    private Long id;
+    private LocalDateTime rentalDate;
+    private LocalDateTime returnDate;
+    private LocalDateTime actualReturnDate;
+    private Long carId;
+    private Long userId;
 }
