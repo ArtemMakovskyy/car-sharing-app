@@ -12,7 +12,10 @@ import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.repository.car.CarRepository;
 import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
 import com.personal.carsharing.carsharingapp.service.RentalService;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +28,7 @@ public class RentalServiceImpl implements RentalService {
     private final RentalRepository rentalRepository;
     private final CarRepository carRepository;
     private final RentalMapper rentalMapper;
+    private final TelegramNotificationService telegramNotificationService;
 
     @Override
     public RentalDto add(
@@ -45,16 +49,29 @@ public class RentalServiceImpl implements RentalService {
         rental.setUser(user);
         rental.setActive(true);
         carRepository.save(rentedСar);
+
+        telegramNotificationService.sendNotification(
+                String.format("You recently got rent car: %s %s%nReturn date: %s",
+                        rentedСar.getBrand(), rentedСar.getModel(),
+                        changeDateFormat(rental.getReturnDate().toString())), user.getId());
+
         return rentalMapper.toDto(rentalRepository.save(rental));
     }
 
     @Override
     public List<RentalDto> findAllByUserIdAndStatus(
             Long userId, Boolean isActive, Pageable pageable) {
-        return rentalRepository.findAllByUserIdAndActive(userId, isActive, pageable)
-                .stream()
-                .map(rentalMapper::toDto)
-                .toList();
+        if (userId == null) {
+            return rentalRepository.findByIsActive(isActive)
+                    .stream()
+                    .map(rentalMapper::toDto)
+                    .toList();
+        } else {
+            return rentalRepository.findAllByUserIdAndActive(userId, isActive, pageable)
+                    .stream()
+                    .map(rentalMapper::toDto)
+                    .toList();
+        }
     }
 
     @Override
@@ -83,6 +100,8 @@ public class RentalServiceImpl implements RentalService {
         final Car car = carRepository.findById(rental.getCar().getId()).get();
         car.setInventory(car.getInventory() + 1);
         carRepository.save(car);
+        telegramNotificationService.sendNotification(
+                "You recently returned rent car ", user.getId());
         return rentalMapper.toDto(rental);
     }
 
@@ -94,5 +113,18 @@ public class RentalServiceImpl implements RentalService {
             return true;
         }
         throw new DataDuplicationException("You cannot rent two cars at the same time");
+    }
+
+    public static String changeDateFormat(String dateStringWithDash) {
+        String patternWithDash = "yyyy-MM-dd";
+        String patternWithSlash = "yyyy/MM/dd";
+        SimpleDateFormat dateFormatWithDash = new SimpleDateFormat(patternWithDash);
+        SimpleDateFormat dateFormatWithSlash = new SimpleDateFormat(patternWithSlash);
+        try {
+            Date date = dateFormatWithDash.parse(dateStringWithDash);
+            return dateFormatWithSlash.format(date);
+        } catch (ParseException e) {
+            throw new RuntimeException("Can't parse data " + e);
+        }
     }
 }

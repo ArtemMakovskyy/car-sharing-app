@@ -11,7 +11,7 @@ public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-        logger.info("API Documentation Overview: http://localhost:8088/api/swagger-ui/index.html#/");
+        logger.info("API Documentation Overview: http://localhost:8080/api/swagger-ui/index.html#/");
         logger.info("http://localhost:8080/api/health");
     }
 

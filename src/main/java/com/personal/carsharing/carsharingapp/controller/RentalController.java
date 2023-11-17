@@ -38,10 +38,10 @@ public class RentalController {
     }
 
     @GetMapping("/")
-    @PreAuthorize("hasAnyRole('ROLE_MANAGER','ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     public List<RentalDto> getRentalsByUserIdAndRentalStatus(
-            @RequestParam(name = "user_id") Long userId,
-            @RequestParam(name = "is_active") Boolean isActive,
+            @RequestParam(name = "user_id", required = false) Long userId,
+            @RequestParam(name = "is_active", defaultValue = "true") Boolean isActive,
             Pageable pageable) {
         return rentalService.findAllByUserIdAndStatus(userId, isActive, pageable);
     }

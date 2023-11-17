@@ -16,7 +16,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
-@ToString
 @Entity
 @Table(name = "cars")
 @Getter

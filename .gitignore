@@ -35,6 +35,6 @@ build/
 /mvnw
 /.mvn/wrapper/maven-wrapper.jar
 /.mvn/
-/src/main/java/com/personal/carsharing/carsharingapp/service/stripe/*
+/src/main/java/com/personal/carsharing/carsharingapp/service/api/stripe/*
 /src/main/java/com/personal/carsharing/carsharingapp/tasks/
 /src/main/java/quastion/*
