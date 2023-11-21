@@ -11,14 +11,4 @@ public class TelegramBotCredentialProvider {
     private String botName;
     @Value("${bot.token}")
     private String token;
-
-    @Value("${telegram.admin.bot.name}")
-    private String adminBotName;
-    @Value("${telegram.admin.bot.token}")
-    private String adminToken;
-
-    @Value("${bot.name.recipe}")
-    private String recipeBotName;
-    @Value("${bot.token.recipe}")
-    private String recipeToken;
 }

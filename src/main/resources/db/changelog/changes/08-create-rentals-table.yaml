@@ -15,17 +15,17 @@ databaseChangeLog:
                     primaryKey: true
               - column:
                   name: rental_date
-                  type: timestamp
+                  type: date
                   constraints:
                     nullable: false
               - column:
                   name: return_date
-                  type: timestamp
+                  type: date
                   constraints:
                     nullable: false
               - column:
                   name: actual_return_date
-                  type: timestamp
+                  type: date
               - column:
                   name: car_id
                   type: bigint

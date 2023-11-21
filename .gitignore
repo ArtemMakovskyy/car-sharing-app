@@ -12,6 +12,8 @@ target/
 .settings
 .springBeans
 .sts4-cache
+.env
+src/main/resources/application.properties
 
 ### IntelliJ IDEA ###
 .idea
@@ -38,3 +40,5 @@ build/
 /src/main/java/com/personal/carsharing/carsharingapp/service/api/stripe/*
 /src/main/java/com/personal/carsharing/carsharingapp/tasks/
 /src/main/java/quastion/*
+/src/main/resources/logs/*
+/src/main/java/com/personal/carsharing/carsharingapp/service/api/telegram/Information.java

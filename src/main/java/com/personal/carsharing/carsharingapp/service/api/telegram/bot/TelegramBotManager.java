@@ -28,14 +28,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-//chat bot class
-//https://dou.ua/forums/topic/38358/
-//https://core-telegram-org.translate.goog/bots/samples?_x_tr_sl=en&_x_tr_tl=ru&_x_tr_hl=uk&_x_tr_pto=wapp
-//https://tlgrm.ru/docs/bots
 @Component
 @RequiredArgsConstructor
-public class TelegramBot extends TelegramLongPollingBot {
-    private static final Logger logger = LogManager.getLogger(TelegramBot.class);
+public class TelegramBotManager extends TelegramLongPollingBot {
+    private static final Logger logger = LogManager.getLogger(TelegramBotManager.class);
     private final TelegramBotCredentialProvider credentialProvider;
     private final UserRepository userRepository;
     private final RentalRepository rentalRepository;
@@ -51,22 +47,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     public String getBotToken() {
         return credentialProvider.getToken();
     }
-
-    //    @PostConstruct
-    //    private void init() {
-    //        List<BotCommand> botCommands = new ArrayList<>();
-    //        botCommands.add(new BotCommand("/start", "Start working with the bot"));
-    //        botCommands.add(new BotCommand("/login", "Login"));
-    //        botCommands.add(new BotCommand("/user_current_rental",
-    //        "Displays current car rental"));
-    //        botCommands.add(new BotCommand("/help", "List of functions"));
-    //        botCommands.add(new BotCommand("/exit", "Log out"));
-    //        try {
-    //            execute(new SetMyCommands(botCommands, new BotCommandScopeDefault(), null));
-    //        } catch (TelegramApiException e) {
-    //            throw new RuntimeException("Can`t create a bot menu", e);
-    //        }
-    //    }
 
     public void sendMessageFromApiToChat(
             Long chatId,
@@ -90,7 +70,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             switch (textFromUSer) {
                 case "/start", "Start application" -> startCommandReceived(
                         userChatId, update.getMessage().getChat().getFirstName());
-                //                case "/login", "Login" -> loginCommandReceived(userChatId);
                 case "/user_current_rental", "Current Rental" ->
                         currentRentalCommandReceived(userChatId);
                 case "/exit", "Log out" ->
@@ -166,11 +145,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             sendMessageToChat(chatId, helpMessage, getWorkButtons());
         }
     }
-
-    //    private void loginCommandReceived(Long chatId) {
-    //        String message = "You should enter email to log in";
-    //        sendMessageToChat(chatId, message, getWorkButtons());
-    //    }
 
     private void saveUserChatId(Long chatId, String email) {
         if (!isValidEmail(email)) {

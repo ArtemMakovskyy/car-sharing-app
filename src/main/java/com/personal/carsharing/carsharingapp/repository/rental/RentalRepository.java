@@ -13,4 +13,12 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     List<Rental> findAllByUserIdAndActive(Long userId, Boolean isActive, Pageable pageable);
 
     List<Rental> findByIsActive(Boolean isActive);
+
+    @Query("""
+            FROM Rental r join FETCH r.user u join FETCH r.car c 
+            WHERE r.isDeleted = false 
+            AND r.isActive = true 
+            AND u.telegramChatId IS NOT NULL
+             """)
+    List<Rental> findAllDetailedRentalsWithTelegramChatId();
 }

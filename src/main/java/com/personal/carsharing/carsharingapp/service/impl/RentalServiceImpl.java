@@ -14,7 +14,7 @@ import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
 import com.personal.carsharing.carsharingapp.service.RentalService;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -94,7 +94,7 @@ public class RentalServiceImpl implements RentalService {
                 .findAny()
                 .orElseThrow(() -> new EntityNotFoundException(
                         "You cannot return a car that you did not rent"));
-        rental.setActualReturnDate(LocalDateTime.now());
+        rental.setActualReturnDate(LocalDate.now());
         rental.setActive(false);
         rentalRepository.save(rental);
         final Car car = carRepository.findById(rental.getCar().getId()).get();

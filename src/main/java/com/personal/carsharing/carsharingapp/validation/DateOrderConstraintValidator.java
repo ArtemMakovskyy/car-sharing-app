@@ -2,7 +2,7 @@ package com.personal.carsharing.carsharingapp.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import org.springframework.beans.BeanWrapperImpl;
 
 public class DateOrderConstraintValidator
@@ -27,8 +27,8 @@ public class DateOrderConstraintValidator
             return false;
         }
 
-        if (fieldValue instanceof LocalDateTime && fieldMatchValue instanceof LocalDateTime) {
-            return ((LocalDateTime) fieldValue).isBefore((LocalDateTime) fieldMatchValue);
+        if (fieldValue instanceof LocalDate && fieldMatchValue instanceof LocalDate) {
+            return ((LocalDate) fieldValue).isBefore((LocalDate) fieldMatchValue);
         }
 
         return false;

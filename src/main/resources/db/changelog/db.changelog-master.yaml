@@ -15,4 +15,3 @@ databaseChangeLog:
       file: db/changelog/changes/07-insert-admin-into-users.yaml
   - include:
       file: db/changelog/changes/08-create-rentals-table.yaml
-

@@ -4,11 +4,8 @@ import java.time.LocalDate;
 import lombok.Data;
 
 @Data
-public class RentalDto {
-    private Long id;
-    private LocalDate rentalDate;
+public class RentalDetailedResponseDto {
     private LocalDate returnDate;
-    private LocalDate actualReturnDate;
-    private Long carId;
     private Long userId;
+    private String userFirstName;
 }

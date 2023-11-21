@@ -4,7 +4,7 @@ import com.personal.carsharing.carsharingapp.exception.EntityNotFoundException;
 import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.repository.user.UserRepository;
 import com.personal.carsharing.carsharingapp.service.NotificationService;
-import com.personal.carsharing.carsharingapp.service.api.telegram.bot.TelegramBot;
+import com.personal.carsharing.carsharingapp.service.api.telegram.bot.TelegramBotManager;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TelegramNotificationService implements NotificationService {
     private static final Logger logger = LogManager.getLogger(TelegramNotificationService.class);
-    private final TelegramBot telegramBot;
+    private final TelegramBotManager telegramBotManager;
     private final UserRepository userRepository;
 
     @Override
@@ -29,7 +29,7 @@ public class TelegramNotificationService implements NotificationService {
                 return;
             }
             message = "API NOTIFICATION:\n" + message;
-            telegramBot.sendMessageFromApiToChat(user.getTelegramChatId(), message);
+            telegramBotManager.sendMessageFromApiToChat(user.getTelegramChatId(), message);
         }
     }
 }

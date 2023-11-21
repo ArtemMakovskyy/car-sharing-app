@@ -10,10 +10,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -29,13 +28,13 @@ public class Rental {
     private Long id;
 
     @Column(name = "rental_date", nullable = false)
-    private LocalDateTime rentalDate;
+    private LocalDate rentalDate;
 
     @Column(name = "return_date", nullable = false)
-    private LocalDateTime returnDate;
+    private LocalDate returnDate;
 
     @Column(name = "actual_return_date")
-    private LocalDateTime actualReturnDate;
+    private LocalDate actualReturnDate;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "car_id", nullable = false)
