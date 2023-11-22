@@ -5,6 +5,7 @@ databaseChangeLog:
       changes:
         - createTable:
             tableName: rentals
+
             columns:
               - column:
                   name: id
@@ -13,19 +14,23 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                     primaryKey: true
+
               - column:
                   name: rental_date
                   type: date
                   constraints:
                     nullable: false
+
               - column:
                   name: return_date
                   type: date
                   constraints:
                     nullable: false
+
               - column:
                   name: actual_return_date
                   type: date
+
               - column:
                   name: car_id
                   type: bigint
@@ -33,6 +38,7 @@ databaseChangeLog:
                     nullable: false
                     foreignKeyName: fk_car_id
                     references: cars(id)
+
               - column:
                   name: user_id
                   type: bigint
@@ -40,12 +46,14 @@ databaseChangeLog:
                     nullable: false
                     foreignKeyName: fk_user_id
                     references: users(id)
+
               - column:
                   name: is_deleted
                   type: boolean
                   defaultValueBoolean: false
                   constraints:
                     nullable: false
+
               - column:
                   name: is_active
                   type: boolean

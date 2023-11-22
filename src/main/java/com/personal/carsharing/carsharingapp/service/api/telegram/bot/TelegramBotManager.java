@@ -166,7 +166,7 @@ public class TelegramBotManager extends TelegramLongPollingBot {
                         "User registration successful", getWorkButtons());
             } else {
                 sendMessageToChat(chatId,
-                        "Сan`t find a user by Login. Please try again.", getRegisterButtons());
+                        "Сan`t find a user by email.", getRegisterButtons());
             }
         }
     }
