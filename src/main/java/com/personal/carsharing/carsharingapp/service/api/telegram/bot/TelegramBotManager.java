@@ -2,10 +2,14 @@ package com.personal.carsharing.carsharingapp.service.api.telegram.bot;
 
 import com.personal.carsharing.carsharingapp.dto.internal.car.CarDto;
 import com.personal.carsharing.carsharingapp.dto.internal.rental.RentalDto;
+import com.personal.carsharing.carsharingapp.dto.internal.user.UserResponseWithChatIdDto;
 import com.personal.carsharing.carsharingapp.dto.mapper.RentalMapper;
+import com.personal.carsharing.carsharingapp.dto.mapper.UserMapper;
 import com.personal.carsharing.carsharingapp.exception.EntityNotFoundException;
+import com.personal.carsharing.carsharingapp.model.Role;
 import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
+import com.personal.carsharing.carsharingapp.repository.role.RoleRepository;
 import com.personal.carsharing.carsharingapp.repository.user.UserRepository;
 import com.personal.carsharing.carsharingapp.service.CarService;
 import com.personal.carsharing.carsharingapp.service.api.telegram.TelegramBotCredentialProvider;
@@ -35,8 +39,10 @@ public class TelegramBotManager extends TelegramLongPollingBot {
     private final TelegramBotCredentialProvider credentialProvider;
     private final UserRepository userRepository;
     private final RentalRepository rentalRepository;
+    private final UserMapper userMapper;
     private final RentalMapper rentalMapper;
     private final CarService carService;
+    private final RoleRepository roleRepository;
 
     @Override
     public String getBotUsername() {
@@ -66,18 +72,14 @@ public class TelegramBotManager extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String textFromUSer = update.getMessage().getText();
             Long userChatId = update.getMessage().getChatId();
-
             switch (textFromUSer) {
                 case "/start", "Start application" -> startCommandReceived(
                         userChatId, update.getMessage().getChat().getFirstName());
                 case "/user_current_rental", "Current Rental" ->
                         currentRentalCommandReceived(userChatId);
-                case "/exit", "Log out" ->
-                        exitRentalsCommandReceived(userChatId);
-                case "/help", "Help" ->
-                        helpRentalsCommandReceived(userChatId);
-                default ->
-                        saveUserChatId(userChatId, update.getMessage().getText());
+                case "/exit", "Log out" -> exitRentalsCommandReceived(userChatId);
+                case "/help", "Help" -> helpRentalsCommandReceived(userChatId);
+                default -> processTextMessage(userChatId, update.getMessage().getText());
             }
         }
     }
@@ -85,7 +87,8 @@ public class TelegramBotManager extends TelegramLongPollingBot {
     private void startCommandReceived(Long chatId, String firstName) {
         String message = firstName + """
                 , welcome to the Car Sharing Bot!
-                For identity, input your email and press "enter".          
+                For identity, input your email and press "enter",         
+                or wright down your question administrator will call you after process.
                 """;
         sendMessageToChat(chatId, message, getRegisterButtons());
     }
@@ -146,28 +149,57 @@ public class TelegramBotManager extends TelegramLongPollingBot {
         }
     }
 
-    private void saveUserChatId(Long chatId, String email) {
-        if (!isValidEmail(email)) {
-            sendMessageToChat(chatId, "Now you can only write down email for "
-                    + "registration, or choose a button.", getWorkButtons());
+    private void processTextMessage(Long chatId, String emailOrMessageToAdmin) {
+        if (isValidEmail(emailOrMessageToAdmin)) {
+            String email = emailOrMessageToAdmin;
+            addUserToChat(chatId, email);
         } else {
-            Optional<User> optionalUserByEmail = userRepository.findUserByEmail(email);
-            if (optionalUserByEmail.isPresent()) {
-                if (isExistEmailRegistration(chatId, optionalUserByEmail)) {
-                    return;
-                }
-                if (isUseMultipleEmailsBySingleChat(chatId)) {
-                    return;
-                }
-                User user = optionalUserByEmail.get();
-                user.setTelegramChatId(chatId);
-                userRepository.save(user);
-                sendMessageToChat(chatId,
-                        "User registration successful", getWorkButtons());
-            } else {
-                sendMessageToChat(chatId,
-                        "Сan`t find a user by email.", getRegisterButtons());
+            String messageToAdmin = emailOrMessageToAdmin;
+            sendQuestionMessageToAdmin(chatId, messageToAdmin);
+        }
+    }
+
+    private void sendQuestionMessageToAdmin(Long chatId, String messageToAnAdmin) {
+        final Role adminRole = roleRepository.findByName(Role.RoleName.ROLE_ADMIN)
+                .orElseThrow(() -> new EntityNotFoundException("ROLE_ADMIN not found"));
+        final UserResponseWithChatIdDto userResponseWithChatIdDto =
+                userRepository.findByRoles(adminRole)
+                        .stream()
+                        .map(userMapper::toDtoWithChatId)
+                        .findAny()
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Can't get admin by role " + adminRole.getName()));
+        if (userResponseWithChatIdDto.getTelegramChatId() == null) {
+            sendMessageToChat(chatId,
+                    "We can't process your message because "
+                           + "is no administrator at the moment, please try again later",
+                    getWorkButtons());
+        } else {
+            sendMessageToChat(chatId,
+                    "The administrator will process the message then contact you",
+                    getWorkButtons());
+            sendMessageToChat(userResponseWithChatIdDto.getTelegramChatId(),
+                    messageToAnAdmin, getWorkButtons());
+        }
+    }
+
+    private void addUserToChat(Long chatId, String emailOrMessageToAdmins) {
+        Optional<User> optionalUserByEmail = userRepository.findUserByEmail(emailOrMessageToAdmins);
+        if (optionalUserByEmail.isPresent()) {
+            if (isExistEmailRegistration(chatId, optionalUserByEmail)) {
+                return;
             }
+            if (isUseMultipleEmailsBySingleChat(chatId)) {
+                return;
+            }
+            User user = optionalUserByEmail.get();
+            user.setTelegramChatId(chatId);
+            userRepository.save(user);
+            sendMessageToChat(chatId,
+                    "User registration successful", getWorkButtons());
+        } else {
+            sendMessageToChat(chatId,
+                    "Сan`t find a user by email.", getRegisterButtons());
         }
     }
 

@@ -5,16 +5,23 @@ package com.personal.carsharing.carsharingapp.controller;
 //import com.stripe.model.Charge;
 //import lombok.AllArgsConstructor;
 
-import org.springframework.http.ResponseEntity;
+import com.personal.carsharing.carsharingapp.dto.internal.payment.CreatePaymentSessionDto;
+import com.personal.carsharing.carsharingapp.dto.internal.payment.PaymentDto;
+import com.personal.carsharing.carsharingapp.service.PaymentService;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-//import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestController;
 
-//@RestController
-//@RequestMapping("/payments")
-//@AllArgsConstructor
+@RestController
+@RequestMapping("/payments")
+@RequiredArgsConstructor
 public class PaymentController {
+    private final PaymentService paymentService;
     // Need to find out
     //    private final StripeService stripeService;
 
@@ -33,29 +40,26 @@ public class PaymentController {
     //    }
     //
 
-    @GetMapping
-    public ResponseEntity<?> getPayments(@RequestParam Long userId) {
-        // Implement get payments logic and return payment information
-        return null;
+    @GetMapping("/")
+    public List<PaymentDto> getPayments(@RequestParam Long userId) {
+        return List.of(new PaymentDto());
     }
 
-    @PostMapping
-    public ResponseEntity<?> createPaymentSession(
-    //            @RequestBody PaymentSessionRequest request
-    ) {
-        // Implement create payment session logic and return session details
-        return null;
+    @PostMapping("/")
+    public PaymentDto createPaymentSession(
+            @RequestBody CreatePaymentSessionDto request) {
+        return new PaymentDto();
     }
 
-    @GetMapping("/success")
-    public ResponseEntity<?> handleSuccessfulPayment() {
+    @GetMapping("/success/")
+    public boolean checkSuccessfulPayments() {
         // Implement logic for successful payment redirection and return appropriate response
-        return null;
+        return true;
     }
 
-    @GetMapping("/cancel")
-    public ResponseEntity<?> handleCancelledPayment() {
+    @GetMapping("/cancel/")
+    public boolean returnPaymentPausedMessage() {
         // Implement logic for cancelled payment redirection and return appropriate response
-        return null;
+        return true;
     }
 }

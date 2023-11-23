@@ -1,5 +1,6 @@
 package com.personal.carsharing.carsharingapp.repository.user;
 
+import com.personal.carsharing.carsharingapp.model.Role;
 import com.personal.carsharing.carsharingapp.model.User;
 import java.util.List;
 import java.util.Optional;
@@ -18,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findById(Long id);
 
     List<User> findByTelegramChatId(Long chatId);
+
+    @EntityGraph(attributePaths = {"roles"})
+    List<User> findByRoles(Role role);
 }

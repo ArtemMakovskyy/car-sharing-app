@@ -2,6 +2,7 @@ package com.personal.carsharing.carsharingapp.dto.mapper;
 
 import com.personal.carsharing.carsharingapp.config.MapperConfig;
 import com.personal.carsharing.carsharingapp.dto.internal.user.UserResponseDto;
+import com.personal.carsharing.carsharingapp.dto.internal.user.UserResponseWithChatIdDto;
 import com.personal.carsharing.carsharingapp.model.Role;
 import com.personal.carsharing.carsharingapp.model.User;
 import java.util.Set;
@@ -15,6 +16,8 @@ import org.mapstruct.ReportingPolicy;
 public interface UserMapper {
 
     UserResponseDto toDto(User user);
+
+    UserResponseWithChatIdDto toDtoWithChatId(User user);
 
     default Set<String> mapRoles(Set<Role> roles) {
         return roles.stream()

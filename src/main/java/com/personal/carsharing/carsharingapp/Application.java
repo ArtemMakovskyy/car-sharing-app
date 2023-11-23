@@ -13,5 +13,4 @@ public class Application {
         log.info("API Documentation Overview: http://localhost:8080/api/swagger-ui/index.html#/");
         log.info("http://localhost:8080/api/health");
     }
-
 }
