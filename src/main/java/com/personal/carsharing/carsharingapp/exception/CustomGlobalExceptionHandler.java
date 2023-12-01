@@ -45,6 +45,18 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return e.getDefaultMessage();
     }
 
+    @ExceptionHandler(value = {StripeProcessException.class})
+    protected ResponseEntity<Object> handleStripeProcessException(
+            StripeProcessException ex,
+            WebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.NOT_FOUND);
+        body.put("error", "Stripe Process Exception. " + ex.getMessage());
+        return handleExceptionInternal(ex, body, new HttpHeaders(),
+                HttpStatus.NOT_FOUND, request);
+    }
+
     @ExceptionHandler(value = {EntityNotFoundException.class})
     protected ResponseEntity<Object> handleEntityNotFoundException(
             EntityNotFoundException ex,

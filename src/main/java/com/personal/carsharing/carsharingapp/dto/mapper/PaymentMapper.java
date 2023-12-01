@@ -1,7 +1,7 @@
 package com.personal.carsharing.carsharingapp.dto.mapper;
 
 import com.personal.carsharing.carsharingapp.config.MapperConfig;
-import com.personal.carsharing.carsharingapp.dto.internal.payment.PaymentDto;
+import com.personal.carsharing.carsharingapp.dto.internal.payment.PaymentResponseDto;
 import com.personal.carsharing.carsharingapp.model.Payment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,6 +11,5 @@ import org.mapstruct.ReportingPolicy;
 public interface PaymentMapper {
 
     @Mapping(target = "rentalId", source = "payment.rental.id")
-    PaymentDto toDto(Payment payment);
-
+    PaymentResponseDto toDto(Payment payment);
 }

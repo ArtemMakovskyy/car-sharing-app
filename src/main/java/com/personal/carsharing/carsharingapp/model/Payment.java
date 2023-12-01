@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.net.URL;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,7 +37,7 @@ public class Payment {
     private Rental rental;
 
     @Column(nullable = false)
-    private String sessionUrl;
+    private URL sessionUrl;
 
     @Column(nullable = false)
     private String sessionId;

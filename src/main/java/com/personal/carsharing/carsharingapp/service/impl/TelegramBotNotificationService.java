@@ -1,4 +1,4 @@
-package com.personal.carsharing.carsharingapp.service.api.telegram.bot;
+package com.personal.carsharing.carsharingapp.service.impl;
 
 import com.personal.carsharing.carsharingapp.dto.internal.car.CarDto;
 import com.personal.carsharing.carsharingapp.dto.internal.rental.RentalDto;
@@ -12,8 +12,8 @@ import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
 import com.personal.carsharing.carsharingapp.repository.role.RoleRepository;
 import com.personal.carsharing.carsharingapp.repository.user.UserRepository;
 import com.personal.carsharing.carsharingapp.service.CarService;
-import com.personal.carsharing.carsharingapp.service.api.telegram.TelegramBotCredentialProvider;
-import jakarta.transaction.Transactional;
+import com.personal.carsharing.carsharingapp.service.NotificationService;
+import com.personal.carsharing.carsharingapp.service.TelegramBotCredentialProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,8 +21,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -32,11 +31,13 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-public class TelegramBotManager extends TelegramLongPollingBot {
-    private static final Logger logger = LogManager.getLogger(TelegramBotManager.class);
-    private final TelegramBotCredentialProvider credentialProvider;
+public class TelegramBotNotificationService
+        extends TelegramLongPollingBot
+        implements NotificationService {
+    private final TelegramBotCredentialProvider telegramBotCredentialProvider;
     private final UserRepository userRepository;
     private final RentalRepository rentalRepository;
     private final UserMapper userMapper;
@@ -46,26 +47,12 @@ public class TelegramBotManager extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return credentialProvider.getBotName();
+        return telegramBotCredentialProvider.getBotName();
     }
 
     @Override
     public String getBotToken() {
-        return credentialProvider.getToken();
-    }
-
-    public void sendMessageFromApiToChat(
-            Long chatId,
-            String textMessage) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText("*" + textMessage + "*");
-        sendMessage.setParseMode("MarkdownV2");
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+        return telegramBotCredentialProvider.getToken();
     }
 
     public void onUpdateReceived(Update update) {
@@ -75,8 +62,8 @@ public class TelegramBotManager extends TelegramLongPollingBot {
             switch (textFromUSer) {
                 case "/start", "Start application" -> startCommandReceived(
                         userChatId, update.getMessage().getChat().getFirstName());
-                case "/user_current_rental", "Current Rental" ->
-                        currentRentalCommandReceived(userChatId);
+                case "/user_current_rental",
+                        "Current Rental" -> currentRentalCommandReceived(userChatId);
                 case "/exit", "Log out" -> exitRentalsCommandReceived(userChatId);
                 case "/help", "Help" -> helpRentalsCommandReceived(userChatId);
                 default -> processTextMessage(userChatId, update.getMessage().getText());
@@ -84,13 +71,38 @@ public class TelegramBotManager extends TelegramLongPollingBot {
         }
     }
 
+    @Override
+    public void sendNotification(String message, Long recipientId) {
+        if (recipientId != null) {
+            final User user = userRepository.findById(recipientId).orElseThrow(
+                    () -> new EntityNotFoundException("Can't find user by id " + recipientId));
+            if (user.getTelegramChatId() == null) {
+                log.debug("User with id " + user.getTelegramChatId()
+                        + " doesn't have telegram ID. User should login "
+                        + "in Bot to getting Telegram notification.");
+                return;
+            }
+            message = "API NOTIFICATION:\n" + message;
+
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(recipientId);
+            sendMessage.setText("*" + message + "*");
+            sendMessage.setParseMode("MarkdownV2");
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     private void startCommandReceived(Long chatId, String firstName) {
         String message = firstName + """
                 , welcome to the Car Sharing Bot!
-                For identity, input your email and press "enter",         
+                For identity, input your email and press "enter",      
                 or wright down your question administrator will call you after process.
                 """;
-        sendMessageToChat(chatId, message, getRegisterButtons());
+        sendInnerMessageToChat(chatId, message, getRegisterButtons());
     }
 
     private void exitRentalsCommandReceived(Long chatId) {
@@ -102,10 +114,9 @@ public class TelegramBotManager extends TelegramLongPollingBot {
         user.setTelegramChatId(null);
         userRepository.save(user);
         String message = "You are logged out.";
-        sendMessageToChat(chatId, message, getRegisterButtons());
+        sendInnerMessageToChat(chatId, message, getRegisterButtons());
     }
 
-    @Transactional
     private void currentRentalCommandReceived(Long chatId) {
         Long userId = userRepository.findByTelegramChatId(chatId)
                 .stream()
@@ -124,28 +135,28 @@ public class TelegramBotManager extends TelegramLongPollingBot {
                     "You are using %s %s%n", carById.brand(), carById.model())
                     + String.format("rented on the: %s%n", rentalDto.getRentalDate())
                     + String.format("time to return on the: %s%n", rentalDto.getReturnDate());
-            sendMessageToChat(chatId, message, getWorkButtons());
+            sendInnerMessageToChat(chatId, message, getWorkButtons());
         } catch (EntityNotFoundException nfe) {
-            sendMessageToChat(chatId, "You don't have a rent car", getWorkButtons());
+            sendInnerMessageToChat(chatId, "You don't have a rent car", getWorkButtons());
         } catch (Exception e) {
-            logger.error("An error occurred in currentRentalCommandReceived", e);
-            sendMessageToChat(chatId,
+            log.error("An error occurred in currentRentalCommandReceived", e);
+            sendInnerMessageToChat(chatId,
                     "An error occurred, please try again later", getWorkButtons());
         }
     }
 
     private void helpRentalsCommandReceived(Long chatId) {
         String helpMessage = """ 
-                Chat bot features: 
+                Chat bot features:
                 1. /start: for starting application. 
                 2. /my_current_rental: displays current car rental and rental details. 
                 3. /help: displays a list of functions.
                 4. /exit: Log out. """;
 
         if (userRepository.findByTelegramChatId(chatId).isEmpty()) {
-            sendMessageToChat(chatId, helpMessage, getRegisterButtons());
+            sendInnerMessageToChat(chatId, helpMessage, getRegisterButtons());
         } else {
-            sendMessageToChat(chatId, helpMessage, getWorkButtons());
+            sendInnerMessageToChat(chatId, helpMessage, getWorkButtons());
         }
     }
 
@@ -170,15 +181,15 @@ public class TelegramBotManager extends TelegramLongPollingBot {
                         .orElseThrow(() -> new EntityNotFoundException(
                                 "Can't get admin by role " + adminRole.getName()));
         if (userResponseWithChatIdDto.getTelegramChatId() == null) {
-            sendMessageToChat(chatId,
+            sendInnerMessageToChat(chatId,
                     "We can't process your message because "
-                           + "is no administrator at the moment, please try again later",
+                            + "is no administrator at the moment, please try again later",
                     getWorkButtons());
         } else {
-            sendMessageToChat(chatId,
+            sendInnerMessageToChat(chatId,
                     "The administrator will process the message then contact you",
                     getWorkButtons());
-            sendMessageToChat(userResponseWithChatIdDto.getTelegramChatId(),
+            sendInnerMessageToChat(userResponseWithChatIdDto.getTelegramChatId(),
                     messageToAnAdmin, getWorkButtons());
         }
     }
@@ -195,17 +206,17 @@ public class TelegramBotManager extends TelegramLongPollingBot {
             User user = optionalUserByEmail.get();
             user.setTelegramChatId(chatId);
             userRepository.save(user);
-            sendMessageToChat(chatId,
+            sendInnerMessageToChat(chatId,
                     "User registration successful", getWorkButtons());
         } else {
-            sendMessageToChat(chatId,
+            sendInnerMessageToChat(chatId,
                     "Сan`t find a user by email.", getRegisterButtons());
         }
     }
 
     private boolean isUseMultipleEmailsBySingleChat(Long chatId) {
         if (userRepository.findByTelegramChatId(chatId).size() > 0) {
-            sendMessageToChat(chatId, """
+            sendInnerMessageToChat(chatId, """
                     You cannot register with multiple email addresses at the same time.
                     Log out with previous email, then register a new one.""", getWorkButtons());
             return true;
@@ -215,13 +226,13 @@ public class TelegramBotManager extends TelegramLongPollingBot {
 
     private boolean isExistEmailRegistration(Long chatId, Optional<User> optionalUserByEmail) {
         if (Objects.equals(optionalUserByEmail.get().getTelegramChatId(), chatId)) {
-            sendMessageToChat(chatId, "You are already registered", getWorkButtons());
+            sendInnerMessageToChat(chatId, "You are already registered", getWorkButtons());
             return true;
         }
         return false;
     }
 
-    private void sendMessageToChat(
+    private void sendInnerMessageToChat(
             Long chatId,
             String textMessage,
             ReplyKeyboardMarkup replyKeyboardMarkup) {

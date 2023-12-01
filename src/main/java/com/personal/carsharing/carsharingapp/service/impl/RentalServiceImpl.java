@@ -11,6 +11,7 @@ import com.personal.carsharing.carsharingapp.model.Rental;
 import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.repository.car.CarRepository;
 import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
+import com.personal.carsharing.carsharingapp.service.NotificationService;
 import com.personal.carsharing.carsharingapp.service.RentalService;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,7 +29,7 @@ public class RentalServiceImpl implements RentalService {
     private final RentalRepository rentalRepository;
     private final CarRepository carRepository;
     private final RentalMapper rentalMapper;
-    private final TelegramNotificationService telegramNotificationService;
+    private final NotificationService notificationService;
 
     @Override
     public RentalDto add(
@@ -50,7 +51,7 @@ public class RentalServiceImpl implements RentalService {
         rental.setActive(true);
         carRepository.save(rentedСar);
 
-        telegramNotificationService.sendNotification(
+        notificationService.sendNotification(
                 String.format("You recently got rent car: %s %s%nReturn date: %s",
                         rentedСar.getBrand(), rentedСar.getModel(),
                         changeDateFormat(rental.getReturnDate().toString())), user.getId());
@@ -100,7 +101,7 @@ public class RentalServiceImpl implements RentalService {
         final Car car = carRepository.findById(rental.getCar().getId()).get();
         car.setInventory(car.getInventory() + 1);
         carRepository.save(car);
-        telegramNotificationService.sendNotification(
+        notificationService.sendNotification(
                 "You recently returned rent car ", user.getId());
         return rentalMapper.toDto(rental);
     }

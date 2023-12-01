@@ -1,15 +1,13 @@
 package com.personal.carsharing.carsharingapp.controller;
 
-//import com.personal.carsharing.carsharingapp.service.stripe.StripeService;
-//import com.stripe.exception.StripeException;
-//import com.stripe.model.Charge;
-//import lombok.AllArgsConstructor;
-
 import com.personal.carsharing.carsharingapp.dto.internal.payment.CreatePaymentSessionDto;
-import com.personal.carsharing.carsharingapp.dto.internal.payment.PaymentDto;
+import com.personal.carsharing.carsharingapp.dto.internal.payment.PaymentResponseDto;
 import com.personal.carsharing.carsharingapp.service.PaymentService;
+import jakarta.validation.Valid;
+import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,46 +18,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/payments")
 @RequiredArgsConstructor
+@Log4j2
 public class PaymentController {
     private final PaymentService paymentService;
-    // Need to find out
-    //    private final StripeService stripeService;
 
-    //    @PostMapping("/charge")
-    //    public String chargeCard(
-    //            @RequestParam("token") String token,
-    //            @RequestParam("amount") double amount) {
-    //        try {
-    //            Charge charge = stripeService.chargeCreditCard(token, amount);
-    //            // Обработка успешного платежа
-    //            return "Платеж успешно проведен!";
-    //        } catch (StripeException e) {
-    //            // Обработка ошибок при платеже
-    //            return "Ошибка при проведении платежа: " + e.getMessage();
-    //        }
-    //    }
-    //
+    //    https://github.com/stripe/stripe-java
+    //    https://stripe.com/docs/api?lang=java
 
     @GetMapping("/")
-    public List<PaymentDto> getPayments(@RequestParam Long userId) {
-        return List.of(new PaymentDto());
+    public List<PaymentResponseDto> getPayments(@RequestParam Long userId) {
+        // TODO: 25.11.2023 GET: /payments/?user_id=... - get payments
+        return Collections.emptyList();
     }
 
     @PostMapping("/")
-    public PaymentDto createPaymentSession(
-            @RequestBody CreatePaymentSessionDto request) {
-        return new PaymentDto();
+    public PaymentResponseDto createPaymentSession(
+            @RequestBody @Valid CreatePaymentSessionDto createPaymentSessionDto) {
+        return paymentService.createPaymentSession(createPaymentSessionDto);
     }
 
     @GetMapping("/success/")
-    public boolean checkSuccessfulPayments() {
-        // Implement logic for successful payment redirection and return appropriate response
-        return true;
+    public String checkSuccessfulPayments() {
+        return "success";
     }
 
     @GetMapping("/cancel/")
-    public boolean returnPaymentPausedMessage() {
-        // Implement logic for cancelled payment redirection and return appropriate response
-        return true;
+    public String returnPaymentPausedMessage() {
+        return "cancel";
     }
 }

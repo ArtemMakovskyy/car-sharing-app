@@ -36,7 +36,7 @@
         <dependency>
             <groupId>com.stripe</groupId>
             <artifactId>stripe-java</artifactId>
-            <version>24.5.0</version>
+            <version>20.108.0</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
