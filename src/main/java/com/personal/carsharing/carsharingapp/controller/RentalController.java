@@ -2,6 +2,7 @@ package com.personal.carsharing.carsharingapp.controller;
 
 import com.personal.carsharing.carsharingapp.dto.internal.rental.CreateRentalRequestDto;
 import com.personal.carsharing.carsharingapp.dto.internal.rental.RentalDto;
+import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.service.RentalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +31,7 @@ public class RentalController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER')")
     @Operation(summary = "Add new rental",
             description = "Add new car rental and decrease car inventory by 1")
     public RentalDto addRental(
@@ -38,11 +41,16 @@ public class RentalController {
     }
 
     @GetMapping("/")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     public List<RentalDto> getRentalsByUserIdAndRentalStatus(
             @RequestParam(name = "user_id", required = false) Long userId,
             @RequestParam(name = "is_active", defaultValue = "true") Boolean isActive,
-            Pageable pageable) {
+            Pageable pageable,
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_CUSTOMER"))) {
+            userId = user.getId();
+            rentalService.findAllByUserIdAndStatus(userId, isActive, pageable);
+        }
         return rentalService.findAllByUserIdAndStatus(userId, isActive, pageable);
     }
 
@@ -51,6 +59,7 @@ public class RentalController {
         return rentalService.getUserRentalDetailsByAuthentication(authentication);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER')")
     @PostMapping("/return")
     public RentalDto returnRental(Authentication authentication) {
         return rentalService.returnRentalCar(authentication);

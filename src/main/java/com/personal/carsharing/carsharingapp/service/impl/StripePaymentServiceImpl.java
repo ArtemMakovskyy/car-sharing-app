@@ -27,33 +27,37 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class StripeServiceImpl implements PaymentService {
-    private static final BigDecimal FINE_MULTIPLIER = new BigDecimal("1.2");
+public class StripePaymentServiceImpl implements PaymentService {
     private static final String BASE_URL = "http://localhost";
     private static final int PORT = 8080;
     private static final String SUCCESS_PAYMENT_URL_PATH = "/api/payments/success";
     private static final String CANCEL_PAYMENT_URL_PATH = "/api/payments/cancel";
-    //    private static final String SESSION_AUTO_REQUEST = "?session_id={CHECKOUT_SESSION_ID}";
-    //    private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm";
-    //    private static final Long EXPIRATION_TIME_IN_SECONDS = 85800L;
-    //    private static final Long SECOND_DIVIDE = 1000L;
+    private static final String QUERY_NAME_PARAM = "session_id";
+    private static final String QUERY_VALUE_PARAM = "{CHECKOUT_SESSION_ID}";
+    private static final BigDecimal FINE_MULTIPLIER = new BigDecimal("1.2");
     private static final Long DEFAULT_CAR_QUANTITY_FOR_RENTING = 1L;
     private static final BigDecimal SMALL_CHANGE_IS_IN_BANKNOTE = new BigDecimal(100);
+    private static final DateTimeFormatter DATE_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private final RentalRepository rentalRepository;
     private final RentalMapper rentalMapper;
     private final CarRepository carRepository;
@@ -69,31 +73,76 @@ public class StripeServiceImpl implements PaymentService {
         Stripe.apiKey = stripeKey;
     }
 
+
+    @Override
+    public List<PaymentResponseDto> findAllByRental_User_Id(Long userId, Pageable pageable) {
+        return paymentRepository.findAllByRental_User_Id(pageable,userId)
+                .map(paymentMapper::toDto).toList();
+    }
+
     @Override
     public PaymentResponseDto createPaymentSession(
             CreatePaymentSessionDto createPaymentSessionDto) {
-        Map<String, Object> rentalPrice = new HashMap<>();
-        rentalPrice.put("price", createPriceFromRentalThenGetPriceId(
-                createPaymentSessionDto.rentalId()));
-        rentalPrice.put("quantity", DEFAULT_CAR_QUANTITY_FOR_RENTING);
-
-        List<Object> lineItems = new ArrayList<>();
-        lineItems.add(rentalPrice);
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("success_url", buildUrl(SUCCESS_PAYMENT_URL_PATH));
-        params.put("cancel_url", buildUrl(CANCEL_PAYMENT_URL_PATH));
-        params.put("line_items", lineItems);
-        params.put("mode", SessionCreateParams.Mode.PAYMENT);
-        List<String> paymentMethodTypes = new ArrayList<>();
-        paymentMethodTypes.add("card");
-        params.put("payment_method_types", paymentMethodTypes);
+        final SessionCreateParams params = SessionCreateParams.builder()
+                .addLineItem(
+                        SessionCreateParams.LineItem.builder()
+                                .setPrice(createPriceFromRentalThenGetPriceId(
+                                        createPaymentSessionDto.rentalId()))
+                                .setQuantity(DEFAULT_CAR_QUANTITY_FOR_RENTING)
+                                .build())
+                .setMode(SessionCreateParams.Mode.PAYMENT)
+                .setSuccessUrl(buildUrl(SUCCESS_PAYMENT_URL_PATH))
+                .setCancelUrl(buildUrl(CANCEL_PAYMENT_URL_PATH))
+                .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+                .build();
         try {
             Session session = Session.create(params);
-            log.info("Session created with link: " + session.getUrl());
+            log.debug(session);
             return createPayment(session, createPaymentSessionDto);
         } catch (StripeException e) {
             throw new StripeProcessException("Can't create pay session ", e);
+        }
+    }
+
+    public String handleSuccessfulPayment(String sessionId) {
+        final Payment paymentFromDb = paymentRepository.findBySessionId(sessionId).orElseThrow(
+                () -> new EntityNotFoundException("Can't find payment by session ID " + sessionId));
+        paymentFromDb.setStatus(Payment.Status.PAID);
+        paymentRepository.save(paymentFromDb);
+        return "The rent payment was successful";
+    }
+
+    @Override
+    public String processPaymentCancellation(String sessionId) {
+        return "The payment can be made later (but the session is available for only 24 hours). "
+                + "Payment validity period ends at "
+                + getEndSessionDateTimeBySessionId(sessionId) + ".";
+    }
+
+    private String getEndSessionDateTimeBySessionId(String sessionId) {
+        try {
+            Session session = Session.retrieve(sessionId);
+            final Long expiresAt = session.getExpiresAt();
+            Instant instant = Instant.ofEpochSecond(expiresAt);
+            LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+            return dateTime.format(DATE_TIME_FORMAT);
+        } catch (StripeException e) {
+            throw new StripeProcessException(
+                    "Can't get expiration time by session ID: " + sessionId, e);
+        }
+    }
+
+    private String createPriceFromRentalThenGetPriceId(Long rentalId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("unit_amount", unitAmountCalculation(rentalId));
+        params.put("currency", SetupIntentCreateParams.PaymentMethodOptions.AcssDebit.Currency.USD);
+        params.put("product", createProductAndGetIdByRentalId(rentalId));
+        try {
+            Price price = Price.create(params);
+            log.info("price id:" + price.getId());
+            return price.getId();
+        } catch (StripeException e) {
+            throw new StripeProcessException("Can't create price", e);
         }
     }
 
@@ -101,6 +150,7 @@ public class StripeServiceImpl implements PaymentService {
         return UriComponentsBuilder.fromUriString(BASE_URL)
                 .port(PORT)
                 .path(path)
+                .queryParam(QUERY_NAME_PARAM, QUERY_VALUE_PARAM)
                 .build()
                 .toString();
     }
@@ -121,20 +171,6 @@ public class StripeServiceImpl implements PaymentService {
             return paymentMapper.toDto(paymentRepository.save(payment));
         } catch (MalformedURLException e) {
             throw new StripeProcessException("Can't add url to payment", e);
-        }
-    }
-
-    private String createPriceFromRentalThenGetPriceId(Long rentalId) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("unit_amount", unitAmountCalculation(rentalId));
-        params.put("currency", SetupIntentCreateParams.PaymentMethodOptions.AcssDebit.Currency.USD);
-        params.put("product", createProductAndGetIdByRentalId(rentalId));
-        try {
-            Price price = Price.create(params);
-            log.info("price id:" + price.getId());
-            return price.getId();
-        } catch (StripeException e) {
-            throw new StripeProcessException("Can't create price ", e);
         }
     }
 
@@ -204,6 +240,6 @@ public class StripeServiceImpl implements PaymentService {
                     daysInRent(rentalDto.getReturnDate(), rentalDto.getActualReturnDate(), false));
             return description + fineDescription;
         }
-        return description;
+        return description + ".";
     }
 }

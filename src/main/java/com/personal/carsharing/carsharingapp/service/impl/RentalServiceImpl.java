@@ -63,16 +63,15 @@ public class RentalServiceImpl implements RentalService {
     public List<RentalDto> findAllByUserIdAndStatus(
             Long userId, Boolean isActive, Pageable pageable) {
         if (userId == null) {
-            return rentalRepository.findByIsActive(isActive)
-                    .stream()
-                    .map(rentalMapper::toDto)
-                    .toList();
-        } else {
-            return rentalRepository.findAllByUserIdAndActive(userId, isActive, pageable)
+            return rentalRepository.findByIsActive(isActive, pageable)
                     .stream()
                     .map(rentalMapper::toDto)
                     .toList();
         }
+        return rentalRepository.findAllByUserIdAndActive(userId, isActive, pageable)
+                .stream()
+                .map(rentalMapper::toDto)
+                .toList();
     }
 
     @Override
@@ -94,26 +93,18 @@ public class RentalServiceImpl implements RentalService {
                 .stream()
                 .findAny()
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "You cannot return a car that you did not rent"));
+                        "You can't return a car that you did not rent"));
         rental.setActualReturnDate(LocalDate.now());
         rental.setActive(false);
         rentalRepository.save(rental);
-        final Car car = carRepository.findById(rental.getCar().getId()).get();
+        final Car car = carRepository.findById(rental.getCar().getId()).orElseThrow(
+                () -> new EntityNotFoundException("Can't get car by id "
+                        + rental.getCar().getId()));
         car.setInventory(car.getInventory() + 1);
         carRepository.save(car);
         notificationService.sendNotification(
                 "You recently returned rent car ", user.getId());
         return rentalMapper.toDto(rental);
-    }
-
-    private boolean checkingDuplicateCarRental(Long userId) {
-        final List<RentalDto> rentalDtos = rentalRepository.findAllByUserIdAndActive(
-                        userId, true, Pageable.unpaged()).stream()
-                .map(rentalMapper::toDto).toList();
-        if (rentalDtos.isEmpty()) {
-            return true;
-        }
-        throw new DataDuplicationException("You cannot rent two cars at the same time");
     }
 
     public static String changeDateFormat(String dateStringWithDash) {
@@ -127,5 +118,15 @@ public class RentalServiceImpl implements RentalService {
         } catch (ParseException e) {
             throw new RuntimeException("Can't parse data " + e);
         }
+    }
+
+    private boolean checkingDuplicateCarRental(Long userId) {
+        final List<RentalDto> rentalDtos = rentalRepository.findAllByUserIdAndActive(
+                        userId, true, Pageable.unpaged()).stream()
+                .map(rentalMapper::toDto).toList();
+        if (rentalDtos.isEmpty()) {
+            return true;
+        }
+        throw new DataDuplicationException("You can't rent two cars at the same time");
     }
 }
