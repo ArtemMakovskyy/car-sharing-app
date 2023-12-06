@@ -15,6 +15,8 @@ import com.personal.carsharing.carsharingapp.repository.car.CarRepository;
 import com.personal.carsharing.carsharingapp.repository.payment.PaymentRepository;
 import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
 import com.personal.carsharing.carsharingapp.service.PaymentService;
+import com.personal.carsharing.carsharingapp.service.strategy.payment.PriceHandler;
+import com.personal.carsharing.carsharingapp.service.strategy.payment.PriceStrategy;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Price;
@@ -64,6 +66,7 @@ public class StripePaymentServiceImpl implements PaymentService {
     private final CarMapper carMapper;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final PriceStrategy priceStrategy;
 
     @Value("${api.stripe.sk.key}")
     private String stripeKey;
@@ -73,10 +76,9 @@ public class StripePaymentServiceImpl implements PaymentService {
         Stripe.apiKey = stripeKey;
     }
 
-
     @Override
     public List<PaymentResponseDto> findAllByRental_User_Id(Long userId, Pageable pageable) {
-        return paymentRepository.findAllByRental_User_Id(pageable,userId)
+        return paymentRepository.findAllByRental_User_Id(pageable, userId)
                 .map(paymentMapper::toDto).toList();
     }
 
@@ -86,8 +88,10 @@ public class StripePaymentServiceImpl implements PaymentService {
         final SessionCreateParams params = SessionCreateParams.builder()
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
-                                .setPrice(createPriceFromRentalThenGetPriceId(
-                                        createPaymentSessionDto.rentalId()))
+                                .setPrice(
+                                        createPriceFromRentalThenGetPriceId(
+                                                createPaymentSessionDto)
+                                )
                                 .setQuantity(DEFAULT_CAR_QUANTITY_FOR_RENTING)
                                 .build())
                 .setMode(SessionCreateParams.Mode.PAYMENT)
@@ -132,18 +136,36 @@ public class StripePaymentServiceImpl implements PaymentService {
         }
     }
 
-    private String createPriceFromRentalThenGetPriceId(Long rentalId) {
+    private String createPriceFromRentalThenGetPriceId(
+            CreatePaymentSessionDto createPaymentSessionDto) {
         Map<String, Object> params = new HashMap<>();
-        params.put("unit_amount", unitAmountCalculation(rentalId));
+        params.put("unit_amount", unitAmountCalculation(createPaymentSessionDto));
         params.put("currency", SetupIntentCreateParams.PaymentMethodOptions.AcssDebit.Currency.USD);
-        params.put("product", createProductAndGetIdByRentalId(rentalId));
+        params.put("product", createProductAndGetIdByRentalId(createPaymentSessionDto.rentalId()));
         try {
             Price price = Price.create(params);
-            log.info("price id:" + price.getId());
             return price.getId();
         } catch (StripeException e) {
             throw new StripeProcessException("Can't create price", e);
         }
+    }
+
+    private int unitAmountCalculation(CreatePaymentSessionDto createPaymentSessionDto) {
+        final Payment.Type paymentType =
+                Payment.Type.valueOf(createPaymentSessionDto.paymentType());
+        final PriceHandler priceHandler =
+                priceStrategy.get(paymentType);
+
+        final RentalDto rentalDto = rentalMapper.toDto(rentalRepository
+                .findById(createPaymentSessionDto.rentalId()).orElseThrow(
+                        () -> new EntityNotFoundException("Can't find rental by id "
+                                + createPaymentSessionDto.rentalId())));
+
+        final Car car = carRepository.findById(rentalDto.getCarId()).orElseThrow(
+                () -> new EntityNotFoundException("Can't find car by id" + rentalDto.getCarId()));
+
+        return priceHandler.getTotalPrice(
+                rentalDto, car.getDailyFee(), FINE_MULTIPLIER, SMALL_CHANGE_IS_IN_BANKNOTE);
     }
 
     private String buildUrl(String path) {
@@ -174,41 +196,6 @@ public class StripePaymentServiceImpl implements PaymentService {
         }
     }
 
-    private int unitAmountCalculation(Long rentalId) {
-        final RentalDto rentalDto = rentalMapper.toDto(rentalRepository
-                .findById(rentalId).orElseThrow());
-        final Car car = carRepository.findById(rentalDto.getCarId()).orElseThrow();
-
-        if (rentalDto.getReturnDate().isEqual(rentalDto.getActualReturnDate())
-                || rentalDto.getActualReturnDate().isBefore(rentalDto.getReturnDate())) {
-            BigDecimal daysInRent = daysInRent(rentalDto.getRentalDate(),
-                    rentalDto.getActualReturnDate(), true);
-            return calculationPriceByPeriodAndIsFine(daysInRent, car.getDailyFee(), false);
-        }
-        BigDecimal daysInRentWithoutFine = daysInRent(rentalDto.getRentalDate(),
-                rentalDto.getReturnDate(), true);
-        BigDecimal daysInRentWithFine = daysInRent(rentalDto.getReturnDate(),
-                rentalDto.getActualReturnDate(), false);
-        return calculationPriceByPeriodAndIsFine(daysInRentWithoutFine, car.getDailyFee(), false)
-                + calculationPriceByPeriodAndIsFine(daysInRentWithFine, car.getDailyFee(), true);
-    }
-
-    private BigDecimal daysInRent(LocalDate start, LocalDate end, boolean isAddDay) {
-        if (isAddDay) {
-            end = end.plusDays(1);
-        }
-        return new BigDecimal(ChronoUnit.DAYS.between(start, end));
-    }
-
-    private int calculationPriceByPeriodAndIsFine(
-            BigDecimal period, BigDecimal dailyFee, boolean isFine) {
-        BigDecimal price = period.multiply(dailyFee).multiply(SMALL_CHANGE_IS_IN_BANKNOTE);
-        if (isFine) {
-            price = price.multiply(FINE_MULTIPLIER);
-        }
-        return price.intValue();
-    }
-
     private String createProductAndGetIdByRentalId(Long rentalId) {
         final RentalDto rentalDto = rentalMapper.toDto(rentalRepository.findById(rentalId)
                 .orElseThrow(() -> new EntityNotFoundException("Can't get rental by id "
@@ -222,7 +209,6 @@ public class StripePaymentServiceImpl implements PaymentService {
 
         try {
             Product product = Product.create(productParams);
-            log.info("product id:" + product.getId());
             return product.getId();
         } catch (StripeException e) {
             throw new StripeProcessException("Can't create product ", e);
@@ -241,5 +227,12 @@ public class StripePaymentServiceImpl implements PaymentService {
             return description + fineDescription;
         }
         return description + ".";
+    }
+
+    private BigDecimal daysInRent(LocalDate start, LocalDate end, boolean isAddDay) {
+        if (isAddDay) {
+            end = end.plusDays(1);
+        }
+        return new BigDecimal(ChronoUnit.DAYS.between(start, end));
     }
 }

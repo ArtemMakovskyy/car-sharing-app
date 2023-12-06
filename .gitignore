@@ -37,10 +37,10 @@ build/
 /mvnw
 /.mvn/wrapper/maven-wrapper.jar
 /.mvn/
-/src/main/java/com/personal/carsharing/carsharingapp/service/api/stripe/*
+/src/main/java/com/personal/carsharing/carsharingapp/tasks/api/stripe/*
 /src/main/java/com/personal/carsharing/carsharingapp/tasks/
 /src/main/java/quastion/*
 /src/main/resources/logs/*
-/src/main/java/com/personal/carsharing/carsharingapp/service/api/telegram/Information.java
+/src/main/java/com/personal/carsharing/carsharingapp/tasks/api/telegram/Information.java
 /src/main/java/com/personal/carsharing/carsharingapp/service/StripeServiceImpl_templ.java
 /src/main/java/com/personal/carsharing/carsharingapp/service/StripeServiceImplTtempl.java
