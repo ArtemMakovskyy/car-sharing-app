@@ -26,7 +26,7 @@ public class AuthenticationController {
 
     @Operation(summary = "Registration of a new user.",
             description = "Save your: email, password,first name, "
-                    + "last name and shipping address for registration.")
+                    + "last name")
     @PostMapping("/register")
     public UserResponseDto registerUser(@RequestBody @Valid UserRegistrationRequestDto requestDto)
             throws RegistrationException {

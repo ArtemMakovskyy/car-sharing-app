@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Data
 @Configuration
-//@ConfigurationProperties
 public class TelegramBotCredentialProvider {
     @Value("${bot.name}")
     private String botName;

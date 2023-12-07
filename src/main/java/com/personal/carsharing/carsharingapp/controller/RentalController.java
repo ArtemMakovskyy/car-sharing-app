@@ -22,24 +22,29 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Rental management", description = "Endpoints for managing rentals")
 @RestController
 @RequestMapping("/rentals")
 @RequiredArgsConstructor
-@Tag(name = "Rental management", description = "Endpoints for managing rentals")
 public class RentalController {
     private final RentalService rentalService;
 
+    @Operation(summary = "Add new rental",
+            description = "Add new car rental and decrease car inventory by 1")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ROLE_CUSTOMER')")
-    @Operation(summary = "Add new rental",
-            description = "Add new car rental and decrease car inventory by 1")
     public RentalDto addRental(
             @RequestBody @Valid CreateRentalRequestDto requestDto,
             Authentication authentication) {
         return rentalService.add(requestDto, authentication);
     }
 
+    @Operation(summary = "Get the rentals by user id and status",
+            description = """
+                    Retrieve rentals by user id and active status.
+                    If user is a CUSTOMER he can get only own data, 
+                    if an ADMIN OR MANAGER can get any data.""")
     @GetMapping("/")
     public List<RentalDto> getRentalsByUserIdAndRentalStatus(
             @RequestParam(name = "user_id", required = false) Long userId,
@@ -54,11 +59,16 @@ public class RentalController {
         return rentalService.findAllByUserIdAndStatus(userId, isActive, pageable);
     }
 
+    @Operation(summary = "Get information about rental",
+            description = "CUSTOMER can get information about his own rental")
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping
     public RentalDto getUserRentalDetails(Authentication authentication) {
         return rentalService.getUserRentalDetailsByAuthentication(authentication);
     }
 
+    @Operation(summary = "Return rental car by CUSTOMER",
+            description = "Return rental car by CUSTOMER and decrease car inventory by 1")
     @PreAuthorize("hasAnyRole('ROLE_CUSTOMER')")
     @PostMapping("/return")
     public RentalDto returnRental(Authentication authentication) {

@@ -42,9 +42,11 @@ public class CarController {
     }
 
     @Operation(summary = "Getting available cars.",
-            description = "Retrieve page with available cars.\n"
-                    + "By default it is first page with 10 cars, sorted ASC by model\n"
-                    + "except those deleted using soft delete.\n")
+            description = """
+                    Retrieve page with all available cars.
+                    By default it is first page with 10 cars, sorted ASC by model
+                    except those deleted using soft delete.
+                    Can use unregistered users""")
     @GetMapping
     public List<CarDto> getAllCars(
             @RequestParam(defaultValue = "0") int page,
@@ -55,8 +57,9 @@ public class CarController {
     }
 
     @Operation(summary = "Getting available car by id.",
-            description = "Retrieve available car by id,\n"
-                    + "if it has not been deleted with soft delete.")
+            description = """
+                    Retrieve available car by id,
+                    if it has not been deleted with soft delete.""")
     @GetMapping("/{id}")
     public CarDto getCarById(@PathVariable Long id) {
         return carService.findById(id);
