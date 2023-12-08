@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  mysqldb:
+    image: mysql
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - MYSQL_DATABASE=car_sharing_db
+      - MYSQL_ROOT_PASSWORD=Password
+    ports:
+      - 3307:3306
+  app:
+    depends_on:
+      - mysqldb
+    image: car_sharing_db
+    restart: unless-stopped
+    build: .
+    env_file: ./.env
+    ports:
+      - 8088:8080
+      - 5005:5005
+    environment:
+      SPRING_APPLICATION_JSON: '{
+        "spring.datasource.url" : "jdbc:mysql://mysqldb:3306/car_sharing_db?serverTimezone=UTC",
+        "spring.datasource.username" : "root",
+        "spring.datasource.password" : "Password",
+        "spring.jpa.hibernate.ddl-auto" : "validate"
+      }'
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"

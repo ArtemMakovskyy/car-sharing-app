@@ -42,7 +42,6 @@ public class User implements UserDetails {
     private String lastName;
 
     @Column(nullable = false)
-
     private String password;
 
     private Long telegramChatId;

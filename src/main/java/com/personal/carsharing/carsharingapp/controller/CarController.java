@@ -81,7 +81,7 @@ public class CarController {
             description = "Soft deleting available car by id")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void deleteCar(@PathVariable Long id) {
-        carService.deleteById(id);
+    public boolean deleteCar(@PathVariable Long id) {
+        return carService.isDeleteById(id);
     }
 }

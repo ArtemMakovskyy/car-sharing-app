@@ -24,6 +24,12 @@
         <maven.checkstyle.plugin.configLocation>checkstyle.xml</maven.checkstyle.plugin.configLocation>
     </properties>
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-docker-compose</artifactId>-->
+<!--            <scope>runtime</scope>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
@@ -36,7 +42,7 @@
         <dependency>
             <groupId>com.stripe</groupId>
             <artifactId>stripe-java</artifactId>
-            <version>20.108.0</version>
+            <version>22.13.0</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
@@ -111,13 +117,7 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>org.springframework.boot</groupId>-->
-        <!--            <artifactId>spring-boot-docker-compose</artifactId>-->
-        <!--            <scope>runtime</scope>-->
-        <!--            <optional>true</optional>-->
-        <!--        проверь со онлайн-->
-        <!--        </dependency>-->
+
         <!--        <dependency>-->
         <!--            <groupId>com.h2database</groupId>-->
         <!--            <artifactId>h2</artifactId>-->
@@ -166,53 +166,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <!--    <build>-->
-    <!--        <finalName>TelegramNotifierBot</finalName>-->
-    <!--        <defaultGoal>package</defaultGoal>-->
-    <!--        <plugins>-->
-    <!--            <plugin>-->
-    <!--                <groupId>org.apache.maven.plugins</groupId>-->
-    <!--                <artifactId>maven-compiler-plugin</artifactId>-->
-    <!--                <version>3.8.1</version> &lt;!&ndash; Исправлена версия maven-compiler-plugin &ndash;&gt;-->
-    <!--                <configuration>-->
-    <!--                    <source>${java.version}</source>-->
-    <!--                    <target>${java.version}</target>-->
-    <!--                    <annotationProcessorPaths>-->
-    <!--                        <path>-->
-    <!--                            <groupId>org.projectlombok</groupId>-->
-    <!--                            <artifactId>lombok</artifactId>-->
-    <!--                            <version>${lombok.version}</version>-->
-    <!--                        </path>-->
-    <!--                        <path>-->
-    <!--                            <groupId>org.projectlombok</groupId>-->
-    <!--                            <artifactId>lombok-mapstruct-binding</artifactId>-->
-    <!--                            <version>${lombok.mapstruct.binding.version}</version>-->
-    <!--                        </path>-->
-    <!--                        <path>-->
-    <!--                            <groupId>org.mapstruct</groupId>-->
-    <!--                            <artifactId>mapstruct-processor</artifactId>-->
-    <!--                            <version>${mapstruct.version}</version>-->
-    <!--                        </path>-->
-    <!--                    </annotationProcessorPaths>-->
-    <!--                </configuration>-->
-    <!--            </plugin>-->
-    <!--            <plugin>-->
-    <!--                <groupId>org.springframework.boot</groupId>-->
-    <!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
-    <!--                <version>2.5.5</version> &lt;!&ndash; Исправлена версия spring-boot-maven-plugin &ndash;&gt;-->
-    <!--                <configuration>-->
-    <!--                    <excludes>-->
-    <!--                        <exclude>-->
-    <!--                            <groupId>org.projectlombok</groupId>-->
-    <!--                            <artifactId>lombok</artifactId>-->
-    <!--                        </exclude>-->
-    <!--                    </excludes>-->
-    <!--                </configuration>-->
-    <!--            </plugin>-->
-    <!--            &lt;!&ndash; Остальные плагины без изменений &ndash;&gt;-->
-    <!--        </plugins>-->
-    <!--    </build>-->
-    <!--</project>-->
 
     <build>
         <plugins>

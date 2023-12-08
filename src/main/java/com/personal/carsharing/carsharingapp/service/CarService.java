@@ -14,5 +14,5 @@ public interface CarService {
 
     CarDto update(Long id, CreateCarRequestDto requestDto);
 
-    void deleteById(Long id);
+    boolean isDeleteById(Long id);
 }

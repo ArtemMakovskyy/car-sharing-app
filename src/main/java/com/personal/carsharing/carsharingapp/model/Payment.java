@@ -27,11 +27,11 @@ public class Payment {
 
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
-    private Status status;
+    private PaymentStatus status;
 
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
-    private Type type;
+    private PaymentType type;
 
     @OneToOne(fetch = FetchType.LAZY)
     private Rental rental;
@@ -44,14 +44,4 @@ public class Payment {
 
     @Column(nullable = false)
     private BigDecimal amountToPay;
-
-    public enum Type {
-        PAYMENT,
-        FINE
-    }
-
-    public enum Status {
-        PENDING,
-        PAID
-    }
 }

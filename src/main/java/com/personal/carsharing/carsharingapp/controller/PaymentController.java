@@ -38,7 +38,7 @@ public class PaymentController {
         if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_CUSTOMER"))) {
             userId = user.getId();
         }
-        return paymentService.findAllByRental_User_Id(userId, pageable);
+        return paymentService.findAllByRentalUserId(userId, pageable);
     }
 
     @PostMapping("/")

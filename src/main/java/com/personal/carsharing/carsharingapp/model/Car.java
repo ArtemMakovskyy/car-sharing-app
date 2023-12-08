@@ -31,7 +31,7 @@ public class Car {
     private String brand;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private Type type;
+    private CarType type;
     @Column(nullable = false)
     @ColumnDefault("0")
     private Integer inventory;
@@ -40,11 +40,4 @@ public class Car {
     private BigDecimal dailyFee;
     @Column(nullable = false)
     private boolean isDeleted = false;
-
-    public enum Type {
-        SEDAN,
-        SUV,
-        HATCHBACK,
-        UNIVERSAL
-    }
 }

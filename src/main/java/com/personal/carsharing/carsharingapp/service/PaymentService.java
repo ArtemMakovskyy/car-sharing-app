@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface PaymentService {
 
-    List<PaymentResponseDto> findAllByRental_User_Id(Long userId, Pageable pageable);
+    List<PaymentResponseDto> findAllByRentalUserId(Long userId, Pageable pageable);
 
     PaymentResponseDto createPaymentSession(CreatePaymentSessionDto createPaymentSessionDto);
 

@@ -6,6 +6,7 @@ import com.personal.carsharing.carsharingapp.dto.internal.user.UserResponseWithC
 import com.personal.carsharing.carsharingapp.dto.mapper.RentalMapper;
 import com.personal.carsharing.carsharingapp.dto.mapper.UserMapper;
 import com.personal.carsharing.carsharingapp.exception.EntityNotFoundException;
+import com.personal.carsharing.carsharingapp.exception.TelegramBotNotificationException;
 import com.personal.carsharing.carsharingapp.model.Role;
 import com.personal.carsharing.carsharingapp.model.User;
 import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
@@ -83,15 +84,14 @@ public class TelegramBotNotificationService
                 return;
             }
             message = "API NOTIFICATION:\n" + message;
-
             SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(recipientId);
+            sendMessage.setChatId(user.getTelegramChatId());
             sendMessage.setText("*" + message + "*");
             sendMessage.setParseMode("MarkdownV2");
             try {
                 execute(sendMessage);
             } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
+                throw new TelegramBotNotificationException("Can't execute message", e);
             }
         }
     }

@@ -21,7 +21,6 @@ public interface PriceHandler {
         if (isFine) {
             price = price.multiply(fineMultiplier);
         }
-        System.out.println(price + " " + fineMultiplier);
         return price.intValue();
     }
 

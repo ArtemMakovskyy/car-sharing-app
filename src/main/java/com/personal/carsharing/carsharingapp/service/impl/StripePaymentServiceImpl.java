@@ -11,6 +11,8 @@ import com.personal.carsharing.carsharingapp.exception.EntityNotFoundException;
 import com.personal.carsharing.carsharingapp.exception.StripeProcessException;
 import com.personal.carsharing.carsharingapp.model.Car;
 import com.personal.carsharing.carsharingapp.model.Payment;
+import com.personal.carsharing.carsharingapp.model.PaymentStatus;
+import com.personal.carsharing.carsharingapp.model.PaymentType;
 import com.personal.carsharing.carsharingapp.repository.car.CarRepository;
 import com.personal.carsharing.carsharingapp.repository.payment.PaymentRepository;
 import com.personal.carsharing.carsharingapp.repository.rental.RentalRepository;
@@ -77,8 +79,8 @@ public class StripePaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<PaymentResponseDto> findAllByRental_User_Id(Long userId, Pageable pageable) {
-        return paymentRepository.findAllByRental_User_Id(pageable, userId)
+    public List<PaymentResponseDto> findAllByRentalUserId(Long userId, Pageable pageable) {
+        return paymentRepository.findAllByRentalUserId(pageable, userId)
                 .map(paymentMapper::toDto).toList();
     }
 
@@ -101,7 +103,7 @@ public class StripePaymentServiceImpl implements PaymentService {
                 .build();
         try {
             Session session = Session.create(params);
-            log.debug(session);
+            log.info(session);
             return createPayment(session, createPaymentSessionDto);
         } catch (StripeException e) {
             throw new StripeProcessException("Can't create pay session ", e);
@@ -111,7 +113,7 @@ public class StripePaymentServiceImpl implements PaymentService {
     public String handleSuccessfulPayment(String sessionId) {
         final Payment paymentFromDb = paymentRepository.findBySessionId(sessionId).orElseThrow(
                 () -> new EntityNotFoundException("Can't find payment by session ID " + sessionId));
-        paymentFromDb.setStatus(Payment.Status.PAID);
+        paymentFromDb.setStatus(PaymentStatus.PAID);
         paymentRepository.save(paymentFromDb);
         return "The rent payment was successful";
     }
@@ -151,8 +153,8 @@ public class StripePaymentServiceImpl implements PaymentService {
     }
 
     private int unitAmountCalculation(CreatePaymentSessionDto createPaymentSessionDto) {
-        final Payment.Type paymentType =
-                Payment.Type.valueOf(createPaymentSessionDto.paymentType());
+        final PaymentType paymentType =
+                PaymentType.valueOf(createPaymentSessionDto.paymentType());
         final PriceHandler priceHandler =
                 priceStrategy.get(paymentType);
 
@@ -181,8 +183,8 @@ public class StripePaymentServiceImpl implements PaymentService {
             Session session, CreatePaymentSessionDto createPaymentSessionDto) {
         Payment payment = new Payment();
         payment.setSessionId(session.getId());
-        payment.setStatus(Payment.Status.PENDING);
-        payment.setType(Payment.Type.valueOf(createPaymentSessionDto.paymentType().toUpperCase()));
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setType(PaymentType.valueOf(createPaymentSessionDto.paymentType().toUpperCase()));
         payment.setRental(rentalRepository.findById(createPaymentSessionDto.rentalId())
                 .orElseThrow(() -> new EntityNotFoundException("Can't find rental by id "
                         + createPaymentSessionDto.rentalId())));

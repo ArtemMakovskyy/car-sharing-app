@@ -104,4 +104,16 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return handleExceptionInternal(ex, body, new HttpHeaders(),
                 HttpStatus.BAD_REQUEST, request);
     }
+
+    @ExceptionHandler(value = TelegramBotNotificationException.class)
+    protected ResponseEntity<Object> handleTelegramBotNotificationException(
+            TelegramBotNotificationException ex,
+            WebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST);
+        body.put("error", "Registration failed. " + ex.getMessage());
+        return handleExceptionInternal(ex, body, new HttpHeaders(),
+                HttpStatus.BAD_REQUEST, request);
+    }
 }

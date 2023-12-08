@@ -1,7 +1,7 @@
 package com.personal.carsharing.carsharingapp.config;
 
 import com.personal.carsharing.carsharingapp.security.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,12 +18,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
-    // TODO: 07.11.2023 customize encoder, filterChain, AuthenticationManager
-    private final UserDetailsService userDetailsService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Value("${security.paths}")
+    private String[] paths;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -31,22 +29,30 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .cors(AbstractHttpConfigurer::disable)
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(
-                        auth -> auth
-                                .requestMatchers("/auth/**","/cars/**").permitAll()
-                                .anyRequest().authenticated()
-                )
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class)
-                .userDetailsService(userDetailsService)
-                .build();
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            UserDetailsService userDetailsService,
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) throws Exception {
+        try {
+            return http
+                    .cors(AbstractHttpConfigurer::disable)
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .authorizeHttpRequests(
+                            auth -> auth
+                                    .requestMatchers(paths).permitAll()
+                                    .anyRequest().authenticated()
+                    )
+                    .httpBasic(Customizer.withDefaults())
+                    .sessionManagement(session -> session
+                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .addFilterBefore(jwtAuthenticationFilter,
+                            UsernamePasswordAuthenticationFilter.class)
+                    .userDetailsService(userDetailsService)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Error while setting up security", e);
+        }
     }
 
     @Bean
