@@ -24,10 +24,10 @@
         <maven.checkstyle.plugin.configLocation>checkstyle.xml</maven.checkstyle.plugin.configLocation>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-docker-compose</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-docker-compose</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
@@ -116,11 +116,11 @@
             <optional>true</optional>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>com.h2database</groupId>-->
-        <!--            <artifactId>h2</artifactId>-->
-        <!--            <scope>runtime</scope>-->
-        <!--        </dependency>-->
+<!--                <dependency>-->
+<!--                    <groupId>com.h2database</groupId>-->
+<!--                    <artifactId>h2</artifactId>-->
+<!--                    <scope>runtime</scope>-->
+<!--                </dependency>-->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
