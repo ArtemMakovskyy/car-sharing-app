@@ -35,6 +35,7 @@ build/
 .vscode/
 /mvnw.cmd
 /mvnw
+/src/test/resources/application.properties
 /.mvn/wrapper/maven-wrapper.jar
 /.mvn/
 /src/main/java/com/personal/carsharing/carsharingapp/tasks/api/stripe/*
