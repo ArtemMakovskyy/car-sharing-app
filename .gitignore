@@ -44,3 +44,4 @@ build/
 /src/main/java/com/personal/carsharing/carsharingapp/tasks/api/telegram/Information.java
 /src/main/java/com/personal/carsharing/carsharingapp/service/StripeServiceImpl_templ.java
 /src/main/java/com/personal/carsharing/carsharingapp/service/StripeServiceImplTtempl.java
+/src/test/tasks/

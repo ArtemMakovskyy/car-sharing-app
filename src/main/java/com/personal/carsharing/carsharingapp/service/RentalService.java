@@ -2,16 +2,16 @@ package com.personal.carsharing.carsharingapp.service;
 
 import com.personal.carsharing.carsharingapp.dto.internal.rental.CreateRentalRequestDto;
 import com.personal.carsharing.carsharingapp.dto.internal.rental.RentalDto;
+import com.personal.carsharing.carsharingapp.model.User;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 
 public interface RentalService {
-    RentalDto add(CreateRentalRequestDto requestDto, Authentication authentication);
+    RentalDto add(CreateRentalRequestDto requestDto, User user);
 
     List<RentalDto> findAllByUserIdAndStatus(Long userId, Boolean isActive, Pageable pageable);
 
-    RentalDto getUserRentalDetailsByAuthentication(Authentication authentication);
+    RentalDto getUserRentalDetailsByAuthentication(Long userId);
 
-    RentalDto returnRentalCar(Authentication authentication);
+    RentalDto returnRentalCar(Long userId);
 }

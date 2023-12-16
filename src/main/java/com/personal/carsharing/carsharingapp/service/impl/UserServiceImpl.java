@@ -47,7 +47,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getUserFromAuthentication(Authentication authentication) {
-        return userMapper.toDto((User) authentication.getPrincipal());
+        final User principal = (User) authentication.getPrincipal();
+        return userMapper.toDto(principal);
     }
 
     @Override

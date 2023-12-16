@@ -80,7 +80,8 @@ public class StripePaymentServiceImpl implements PaymentService {
 
     @Override
     public List<PaymentResponseDto> findAllByRentalUserId(Long userId, Pageable pageable) {
-        return paymentRepository.findAllByRentalUserId(pageable, userId)
+        return paymentRepository
+                .findAllByRentalUserId(pageable, userId)
                 .map(paymentMapper::toDto).toList();
     }
 
@@ -217,7 +218,7 @@ public class StripePaymentServiceImpl implements PaymentService {
         }
     }
 
-    private String createDescription(RentalDto rentalDto, CarDto carDto) {
+    String createDescription(RentalDto rentalDto, CarDto carDto) {
         final String description = String.format(
                 "Rental car: %s %s, type %s. Was in rent from %s to %s", carDto.brand(),
                 carDto.model(), carDto.type(), rentalDto.getRentalDate(),

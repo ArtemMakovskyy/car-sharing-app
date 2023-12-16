@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,7 +33,7 @@ public class RentalServiceImpl implements RentalService {
     @Override
     public RentalDto add(
             CreateRentalRequestDto requestDto,
-            Authentication authentication) {
+            User user) {
         final Car rentedСar = carRepository.findById(requestDto.getCarId()).orElseThrow(
                 () -> new EntityNotFoundException("Can't find car by id " + requestDto.getCarId()));
         if (rentedСar.getInventory() == 0) {
@@ -42,7 +41,6 @@ public class RentalServiceImpl implements RentalService {
         }
         rentedСar.setInventory(rentedСar.getInventory() - 1);
 
-        final User user = (User) authentication.getPrincipal();
         checkingDuplicateCarRental(user.getId());
 
         final Rental rental = rentalMapper.createDtoToEntity(requestDto);
@@ -75,21 +73,19 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public RentalDto getUserRentalDetailsByAuthentication(Authentication authentication) {
-        final User user = (User) authentication.getPrincipal();
-        return rentalRepository.findAllByUserIdAndActive(user.getId(), true, Pageable.unpaged())
+    public RentalDto getUserRentalDetailsByAuthentication(Long userId) {
+        return rentalRepository.findAllByUserIdAndActive(userId, true, Pageable.unpaged())
                 .stream()
                 .map(rentalMapper::toDto)
                 .findAny()
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Can't find rent by id " + user.getId()));
+                        "Can't find rent by id " + userId));
     }
 
     @Override
-    public RentalDto returnRentalCar(Authentication authentication) {
-        final User user = (User) authentication.getPrincipal();
+    public RentalDto returnRentalCar(Long userId) {
         final Rental rental = rentalRepository.findAllByUserIdAndActive(
-                        user.getId(), true, Pageable.unpaged())
+                        userId, true, Pageable.unpaged())
                 .stream()
                 .findAny()
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -103,7 +99,7 @@ public class RentalServiceImpl implements RentalService {
         car.setInventory(car.getInventory() + 1);
         carRepository.save(car);
         notificationService.sendNotification(
-                "You recently returned rent car ", user.getId());
+                "You recently returned rent car ", userId);
         return rentalMapper.toDto(rental);
     }
 

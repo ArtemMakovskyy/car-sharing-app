@@ -37,7 +37,8 @@ public class RentalController {
     public RentalDto addRental(
             @RequestBody @Valid CreateRentalRequestDto requestDto,
             Authentication authentication) {
-        return rentalService.add(requestDto, authentication);
+        final User user = (User) authentication.getPrincipal();
+        return rentalService.add(requestDto, user);
     }
 
     @Operation(summary = "Get the rentals by user id and status",
@@ -64,7 +65,8 @@ public class RentalController {
     @PreAuthorize("hasRole('ROLE_CUSTOMER')")
     @GetMapping
     public RentalDto getUserRentalDetails(Authentication authentication) {
-        return rentalService.getUserRentalDetailsByAuthentication(authentication);
+        final User user = (User) authentication.getPrincipal();
+        return rentalService.getUserRentalDetailsByAuthentication(user.getId());
     }
 
     @Operation(summary = "Return rental car by CUSTOMER",
@@ -72,6 +74,7 @@ public class RentalController {
     @PreAuthorize("hasAnyRole('ROLE_CUSTOMER')")
     @PostMapping("/return")
     public RentalDto returnRental(Authentication authentication) {
-        return rentalService.returnRentalCar(authentication);
+        final User user = (User) authentication.getPrincipal();
+        return rentalService.returnRentalCar(user.getId());
     }
 }

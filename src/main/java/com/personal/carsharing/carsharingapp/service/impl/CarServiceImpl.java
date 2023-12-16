@@ -36,15 +36,15 @@ public class CarServiceImpl implements CarService {
     @Override
     public CarDto findById(Long id) {
         return carMapper.toDto(carRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("" + id)));
+                .orElseThrow(() -> new EntityNotFoundException("Can't get car bi id " + id)));
     }
 
     @Override
     public CarDto update(Long id, CreateCarRequestDto requestDto) {
         if (carRepository.existsById(id)) {
-            final Car car = carMapper.fromCreateDtoToEntity(requestDto);
+            Car car = carMapper.fromCreateDtoToEntity(requestDto);
             car.setId(id);
-            final Car savedCar = carRepository.save(car);
+            Car savedCar = carRepository.save(car);
             return carMapper.toDto(savedCar);
         }
         throw new EntityNotFoundException("Car by id " + id + " does not exist");

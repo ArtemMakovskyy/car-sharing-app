@@ -73,7 +73,7 @@ public class TelegramBotNotificationService
     }
 
     @Override
-    public void sendNotification(String message, Long recipientId) {
+    public boolean sendNotification(String message, Long recipientId) {
         if (recipientId != null) {
             final User user = userRepository.findById(recipientId).orElseThrow(
                     () -> new EntityNotFoundException("Can't find user by id " + recipientId));
@@ -81,7 +81,7 @@ public class TelegramBotNotificationService
                 log.debug("User with id " + user.getTelegramChatId()
                         + " doesn't have telegram ID. User should login "
                         + "in Bot to getting Telegram notification.");
-                return;
+                return false;
             }
             message = "API NOTIFICATION:\n" + message;
             SendMessage sendMessage = new SendMessage();
@@ -90,10 +90,12 @@ public class TelegramBotNotificationService
             sendMessage.setParseMode("MarkdownV2");
             try {
                 execute(sendMessage);
+                return true;
             } catch (TelegramApiException e) {
                 throw new TelegramBotNotificationException("Can't execute message", e);
             }
         }
+        return false;
     }
 
     private void startCommandReceived(Long chatId, String firstName) {
