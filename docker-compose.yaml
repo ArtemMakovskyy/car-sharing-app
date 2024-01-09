@@ -10,13 +10,18 @@ services:
       - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
     ports:
       - "3307:3306"
+#    healthcheck:
+#      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+#      interval: 30s
+#      timeout: 30s
+#      retries: 3
   app:
     depends_on:
       - db
     build: .
     restart: unless-stopped
+#    image: carsharing-app:v01
     env_file: ./.env
-
     ports:
       - "8080:8080"
       - "5005:5005"

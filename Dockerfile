@@ -15,3 +15,11 @@ COPY --from=builder application/snapshot-dependencies/ ./
 COPY --from=builder application/application/ ./
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
 EXPOSE 8080
+
+# second variant
+#FROM openjdk:17-alpine
+#WORKDIR /usr/src/application
+#ARG JAR_FILE=target/*.jar
+#COPY ${JAR_FILE} application.jar
+#EXPOSE 8080
+#CMD ["java", "-jar", "application.jar"]

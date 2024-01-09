@@ -12,8 +12,8 @@ target/
 .settings
 .springBeans
 .sts4-cache
-.env
-src/main/resources/application.properties
+#.env
+#src/main/resources/application.properties
 
 ### IntelliJ IDEA ###
 .idea
@@ -35,13 +35,6 @@ build/
 .vscode/
 /mvnw.cmd
 /mvnw
-/src/test/resources/application.properties
+#/src/test/resources/application.properties
 /.mvn/wrapper/maven-wrapper.jar
 /.mvn/
-/src/main/java/com/personal/carsharing/carsharingapp/tasks/api/stripe/*
-/src/main/java/com/personal/carsharing/carsharingapp/tasks/
-/src/main/java/quastion/*
-/src/main/java/com/personal/carsharing/carsharingapp/tasks/api/telegram/Information.java
-/src/main/java/com/personal/carsharing/carsharingapp/service/StripeServiceImpl_templ.java
-/src/main/java/com/personal/carsharing/carsharingapp/service/StripeServiceImplTtempl.java
-/src/test/tasks/
