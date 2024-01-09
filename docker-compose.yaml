@@ -1,7 +1,8 @@
+
 version: "3.8"
 
 services:
-  db:
+  db_docker_host:
     image: mysql:8
     restart: unless-stopped
     env_file: ./.env
@@ -10,27 +11,27 @@ services:
       - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
     ports:
       - "3307:3306"
-#    healthcheck:
-#      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-#      interval: 30s
-#      timeout: 30s
-#      retries: 3
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
   app:
     depends_on:
-      - db
+      - db_docker_host
     build: .
     restart: unless-stopped
-#    image: carsharing-app:v01
+    image: carsharing-app:v01
     env_file: ./.env
     ports:
       - "8080:8080"
       - "5005:5005"
-#      - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
-#    environment:
-#      SPRING_APPLICATION_JSON: '{
-#        "spring.datasource.url" : "jdbc:mysql://mysqldb:$MYSQL_DB_DOCKER_PORT/$MYSQLDB_DATABASE?serverTimezone=UTC",
-#        "spring.datasource.username" : "$MYSQLDB_USER",
-#        "spring.datasource.password" : "$MYSQLDB_ROOT_PASSWORD",
-#        "spring.jpa.hibernate.ddl-auto" : "validate"
-#      }'
-#      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
+    environment:
+      SPRING_APPLICATION_JSON: '{
+        "spring.datasource.url" : "jdbc:mysql://db_docker_host:3306/car_sharing_db?serverTimezone=UTC",
+        "spring.datasource.username" : "$MYSQLDB_USER",
+        "spring.datasource.password" : "$MYSQLDB_ROOT_PASSWORD",
+        "spring.jpa.hibernate.ddl-auto" : "validate"
+      }'
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
