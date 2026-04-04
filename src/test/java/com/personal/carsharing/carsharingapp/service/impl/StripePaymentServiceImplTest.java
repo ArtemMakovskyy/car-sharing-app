@@ -2,6 +2,7 @@ package com.personal.carsharing.carsharingapp.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
@@ -17,6 +18,7 @@ import com.personal.carsharing.carsharingapp.dto.internal.rental.RentalDto;
 import com.personal.carsharing.carsharingapp.dto.mapper.CarMapper;
 import com.personal.carsharing.carsharingapp.dto.mapper.PaymentMapper;
 import com.personal.carsharing.carsharingapp.dto.mapper.RentalMapper;
+import com.personal.carsharing.carsharingapp.exception.EntityNotFoundException;
 import com.personal.carsharing.carsharingapp.model.Car;
 import com.personal.carsharing.carsharingapp.model.CarType;
 import com.personal.carsharing.carsharingapp.model.Payment;
@@ -191,6 +193,20 @@ class StripePaymentServiceImplTest {
         verify(paymentRepository, times(1)).findBySessionId(SESSION_ID);
         verify(paymentRepository, times(1)).save(payment);
         verifyNoMoreInteractions(paymentRepository);
+    }
+
+    @DisplayName("Handle successful payment with unknown session id throws EntityNotFoundException")
+    @Test
+    void handleSuccessfulPayment_PaymentNotFound_ThrowsEntityNotFoundException() {
+        when(paymentRepository.findBySessionId(SESSION_ID)).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> paymentService.handleSuccessfulPayment(SESSION_ID));
+
+        assertEquals("Can't find payment by session ID " + SESSION_ID, exception.getMessage());
+        verify(paymentRepository, times(1)).findBySessionId(SESSION_ID);
+        verify(paymentRepository, times(0)).save(any());
     }
 
     private RentalDto toRentalDto(Rental rental) {

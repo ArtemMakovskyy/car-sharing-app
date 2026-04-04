@@ -1,10 +1,13 @@
 package com.personal.carsharing.carsharingapp.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +15,9 @@ import static org.mockito.Mockito.when;
 import com.personal.carsharing.carsharingapp.dto.internal.rental.CreateRentalRequestDto;
 import com.personal.carsharing.carsharingapp.dto.internal.rental.RentalDto;
 import com.personal.carsharing.carsharingapp.dto.mapper.RentalMapper;
+import com.personal.carsharing.carsharingapp.exception.DataDuplicationException;
+import com.personal.carsharing.carsharingapp.exception.EmptyDataException;
+import com.personal.carsharing.carsharingapp.exception.EntityNotFoundException;
 import com.personal.carsharing.carsharingapp.model.Car;
 import com.personal.carsharing.carsharingapp.model.CarType;
 import com.personal.carsharing.carsharingapp.model.Rental;
@@ -133,6 +139,145 @@ class RentalServiceImplTest {
         assertEquals(expectedRentalDtos.size(), actualRentalDtos.size());
         verify(rentalRepository, times(1)).findByIsActive(true, Pageable.unpaged());
         verify(rentalMapper, times(1)).toDto(any(Rental.class));
+    }
+
+    @DisplayName("Add rental for car with zero inventory throws EmptyDataException")
+    @Test
+    void add_ZeroInventory_ThrowEmptyDataException() {
+        // given
+        User user = getUser();
+        CreateRentalRequestDto requestDto = getCreateRentalRequestDto();
+        Car outOfStockCar = getCar();
+        outOfStockCar.setInventory(0);
+
+        when(carRepository.findById(requestDto.getCarId())).thenReturn(Optional.of(outOfStockCar));
+
+        // when
+        EmptyDataException exception = assertThrows(
+                EmptyDataException.class,
+                () -> rentalService.add(requestDto, user));
+
+        // then
+        assertEquals("These car models are out of stock for rent", exception.getMessage());
+        verify(carRepository, times(1)).findById(requestDto.getCarId());
+        verify(rentalRepository, never()).save(any(Rental.class));
+        verify(notificationService, never()).sendNotification(anyString(), anyLong());
+    }
+
+    @DisplayName("Add rental when user already has active rental throws DataDuplicationException")
+    @Test
+    void add_ActiveRentalExists_ThrowDataDuplicationException() {
+        // given
+        User user = getUser();
+        CreateRentalRequestDto requestDto = getCreateRentalRequestDto();
+        Car car = getCar();
+        Rental existingRental = getRental(car, user, requestDto);
+
+        when(carRepository.findById(requestDto.getCarId())).thenReturn(Optional.of(car));
+        when(rentalRepository.findAllByUserIdAndActive(user.getId(), true, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(existingRental)));
+        when(rentalMapper.toDto(existingRental)).thenReturn(toRentalDto(existingRental));
+
+        // when
+        DataDuplicationException exception = assertThrows(
+                DataDuplicationException.class,
+                () -> rentalService.add(requestDto, user));
+
+        // then
+        assertEquals("You can't rent two cars at the same time", exception.getMessage());
+        verify(carRepository, times(1)).findById(requestDto.getCarId());
+        verify(rentalRepository, times(1))
+                .findAllByUserIdAndActive(user.getId(), true, Pageable.unpaged());
+        verify(rentalRepository, never()).save(any(Rental.class));
+    }
+
+    @DisplayName("Return rental when active rental does not exist throws EntityNotFoundException")
+    @Test
+    void returnRentalCar_NoActiveRental_ThrowEntityNotFoundException() {
+        // given
+        Long userId = getUser().getId();
+        when(rentalRepository.findAllByUserIdAndActive(userId, true, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        // when
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> rentalService.returnRentalCar(userId));
+
+        // then
+        assertEquals("You can't return a car that you did not rent", exception.getMessage());
+        verify(rentalRepository, times(1))
+                .findAllByUserIdAndActive(userId, true, Pageable.unpaged());
+        verify(carRepository, never()).save(any(Car.class));
+    }
+
+    @DisplayName("Return rental updates active flag and increases inventory")
+    @Test
+    void returnRentalCar_ValidRental_UpdatesRentalAndCar() {
+        // given
+        User user = getUser();
+        Car car = getCar();
+        car.setInventory(0);
+        Rental rental = getRental(car, user, getCreateRentalRequestDto());
+
+        when(rentalRepository.findAllByUserIdAndActive(user.getId(), true, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(rental)));
+        when(carRepository.findById(car.getId())).thenReturn(Optional.of(car));
+        when(rentalRepository.save(any(Rental.class))).thenReturn(rental);
+        when(carRepository.save(any(Car.class))).thenReturn(car);
+        when(rentalMapper.toDto(any(Rental.class))).thenReturn(toRentalDto(rental));
+        when(notificationService.sendNotification(anyString(), anyLong())).thenReturn(true);
+
+        // when
+        RentalDto actual = rentalService.returnRentalCar(user.getId());
+
+        // then
+        assertNotNull(actual);
+        assertFalse(rental.isActive());
+        assertEquals(1, car.getInventory());
+        verify(rentalRepository, times(1)).save(rental);
+        verify(carRepository, times(1)).save(car);
+        verify(notificationService, times(1)).sendNotification(anyString(), anyLong());
+    }
+
+    @DisplayName("Add rental with unknown car id throws EntityNotFoundException")
+    @Test
+    void add_UnknownCarId_ThrowEntityNotFoundException() {
+        // given
+        User user = getUser();
+        CreateRentalRequestDto requestDto = getCreateRentalRequestDto();
+        when(carRepository.findById(requestDto.getCarId())).thenReturn(Optional.empty());
+
+        // when
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> rentalService.add(requestDto, user));
+
+        // then
+        assertEquals("Can't find car by id " + requestDto.getCarId(), exception.getMessage());
+        verify(rentalRepository, never()).save(any(Rental.class));
+    }
+
+    @DisplayName("Return rental with missing car entity throws EntityNotFoundException")
+    @Test
+    void returnRentalCar_CarMissing_ThrowEntityNotFoundException() {
+        // given
+        User user = getUser();
+        Car car = getCar();
+        Rental rental = getRental(car, user, getCreateRentalRequestDto());
+
+        when(rentalRepository.findAllByUserIdAndActive(user.getId(), true, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(rental)));
+        when(rentalRepository.save(any(Rental.class))).thenReturn(rental);
+        when(carRepository.findById(car.getId())).thenReturn(Optional.empty());
+
+        // when
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> rentalService.returnRentalCar(user.getId()));
+
+        // then
+        assertEquals("Can't get car by id " + car.getId(), exception.getMessage());
     }
 
     private RentalDto toRentalDto(Rental rental) {

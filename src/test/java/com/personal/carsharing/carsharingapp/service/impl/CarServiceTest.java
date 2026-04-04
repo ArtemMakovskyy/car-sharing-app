@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -94,7 +93,7 @@ class CarServiceTest {
     @Test
     public void findById_ValidCarId_ReturnCarDto() {
         //given
-        Long carId = anyLong();
+        Long carId = 100L;
         Car car = getCarAudiA8();
         CarDto expected = toCarDto(car);
 
@@ -116,8 +115,7 @@ class CarServiceTest {
     public void findById_InvalidCarId_ThrowException() {
         //given
         Mockito.when(carRepository.findById(INVALID_NON_EXISTING_ID))
-                .thenThrow(new EntityNotFoundException(
-                        "Can't get car bi id " + INVALID_NON_EXISTING_ID));
+                .thenReturn(Optional.empty());
 
         //when
         final EntityNotFoundException actualException =
@@ -182,12 +180,12 @@ class CarServiceTest {
     @DisplayName("Delete car by valid id. Should return true")
     public void isDeleteById_ValidId_ShouldReturnTrue() {
         // Given
-        Long carId = anyLong();
+        Long carId = 100L;
 
         when(carRepository.existsById(carId)).thenReturn(true);
 
         // when
-        final boolean result = carService.isDeleteById(anyLong());
+        final boolean result = carService.isDeleteById(carId);
 
         // then
         assertTrue(result);
@@ -199,9 +197,8 @@ class CarServiceTest {
     public void isDeleteById_InvalidId_ThrowEntityNotFoundException() {
         //given
         Mockito.when(carRepository.existsById(INVALID_NON_EXISTING_ID))
-                .thenThrow(new EntityNotFoundException(
-                        "Car by id  " + INVALID_NON_EXISTING_ID + "  does not exist"));
-        String expected = "Car by id  " + INVALID_NON_EXISTING_ID + "  does not exist";
+                .thenReturn(false);
+        String expected = "Car by id " + INVALID_NON_EXISTING_ID + " does not exist";
 
         //when
         EntityNotFoundException exception =
