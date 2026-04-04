@@ -38,6 +38,15 @@
   - JUnit Jupiter
   - Testcontainers (for containerized testing)
   - Mockito
+-  **Test Coverage (JaCoCo)**
+  - Plugin: `org.jacoco:jacoco-maven-plugin:0.8.12`
+  - Coverage gate: line coverage minimum `0.20` (baseline for pet project)
+  - Commands:
+    - `mvn test` — runs tests and collects raw coverage data into `target/jacoco.exec`
+    - `mvn verify` — runs tests, generates coverage report, and applies coverage check (`jacoco:check`)
+  - Report location:
+    - Main HTML report: `target/site/jacoco/index.html`
+    - Raw execution data: `target/jacoco.exec`
 - API Documentation Tools:
   - Springdoc OpenAPI Starter Webmvc UI (version 2.1.0)
 - JWT Processing Libraries:
