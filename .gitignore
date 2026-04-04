@@ -38,3 +38,4 @@ build/
 #/src/test/resources/application.properties
 /.mvn/wrapper/maven-wrapper.jar
 /.mvn/
+/.temp/
